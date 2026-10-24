@@ -16,8 +16,13 @@ export function extractEntities(json) {
       || (typeof item.type === 'string' ? item.type.replace(/^urn:entity:/, '') : null);
     if (!UUID.test(id) || !name) return null;
     const raw = item.query && item.query.affinity;
+    // Qloo's numeric affinity is optional and must never be synthesised from
+    // booleans, nulls or empty strings. We expose it as raw provider evidence,
+    // not a percent or estimated chance of personal satisfaction.
+    const numeric = typeof raw === 'number' ? raw :
+      (typeof raw === 'string' && raw.trim() && /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(raw.trim()) ? Number(raw) : null);
     return {id, name: name.slice(0, 120), type: CATEGORIES.includes(type) ? type : null,
-      affinity: raw !== null && raw !== undefined && Number.isFinite(Number(raw)) ? Number(raw) : null};
+      affinity: typeof numeric === 'number' && Number.isFinite(numeric) ? numeric : null};
   }).filter(Boolean);
 }
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));

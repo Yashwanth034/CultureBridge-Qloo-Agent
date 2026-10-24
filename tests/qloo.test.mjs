@@ -9,6 +9,12 @@ test('normalizes documented Qloo entity envelopes',()=>{
   assert.equal(entities[0].type,'movie');
   assert.equal(entities[0].affinity,0.66);
 });
+test('Qloo affinity retains only genuine finite numeric provider values',()=>{
+  const make=value=>({entity_id:ID,name:'Dune',type:'urn:entity:movie',query:{affinity:value}});
+  const values=[0.42,'0.73',0,'',true,null,'NaN',Infinity,'0x10','1e-2'];
+  const rows=extractEntities({results:{entities:values.map(make)}});
+  assert.deepEqual(rows.map(x=>x.affinity),[0.42,0.73,0,null,null,null,null,null,null,0.01]);
+});
 test('Qloo requests target event origin, pass server-only key, cache and exclude seeds',async()=>{
   const calls=[];
   const fetchImpl=async (url,opts)=>{calls.push({url:String(url),headers:opts.headers});return {ok:true,status:200,async json(){return {success:true,results:{entities:[entity]}}}};};

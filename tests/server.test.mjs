@@ -81,6 +81,31 @@ test('HTTP /api/plan preserves truthful independent evidence when optional joint
     assert.doesNotMatch(JSON.stringify(plan),/mock-local-key/);
   }finally{await new Promise(resolve=>server.close(resolve));}
 });
+test('HTTP /api/plan keeps raw Qloo affinity evidence distinct from relative fairness',async()=>{
+  const client={
+    apiKey:'stub-only',
+    async search(name,type){return [{id:uid(name==='Dune'?1:2),name,type:'movie'}]},
+    async insights(type,ids){
+      const affinity=ids.length===2?0.62:ids[0]===uid(1)?0.8:0.23;
+      return [{...entity(99),affinity}];
+    }
+  };
+  const {server,url}=await serve(client);
+  try{
+    const result=await fetch(url+'/api/plan',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({groupA:'movie: Dune',groupB:'movie: Barbie',category:'movie'})
+    });
+    assert.equal(result.status,200);
+    const plan=await result.json();
+    assert.equal(plan.candidates.length,1);
+    assert.equal(plan.candidates[0].score,100);
+    assert.equal(plan.candidates[0].groupAAffinity,0.8);
+    assert.equal(plan.candidates[0].groupBAffinity,0.23);
+    assert.equal(plan.candidates[0].jointAffinity,0.62);
+    assert.doesNotMatch(JSON.stringify(plan),/stub-only/);
+  }finally{await new Promise(resolve=>server.close(resolve));}
+});
 test('HTTP /api/plan returns grounded Qloo-shaped output without secrets',async()=>{
   const client={
     apiKey:'dummy-event-key',

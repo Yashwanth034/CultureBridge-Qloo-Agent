@@ -36,6 +36,11 @@ export function reconcile(a,b,joint,max=6,strategy='balanced') {
       id,name:(left||right||bridge).item.name,
       type:(left||right||bridge).item.type,
       groupAScore:pa,groupBScore:pb,
+      // Preserve optional Qloo-reported affinity, separately from our rank
+      // heuristic. Never treat values from different queries as probabilities.
+      groupAAffinity:left && typeof left.item.affinity==='number' && Number.isFinite(left.item.affinity)?left.item.affinity:null,
+      groupBAffinity:right && typeof right.item.affinity==='number' && Number.isFinite(right.item.affinity)?right.item.affinity:null,
+      jointAffinity:bridge && typeof bridge.item.affinity==='number' && Number.isFinite(bridge.item.affinity)?bridge.item.affinity:null,
       commonGround:both,jointDiscovery:Boolean(bridge),
       parityGap:Math.abs(pa-pb),
       score:both?Math.round(.7*Math.min(pa,pb)+.3*(pa+pb)/2):0,

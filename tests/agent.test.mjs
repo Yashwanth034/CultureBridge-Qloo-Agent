@@ -18,6 +18,20 @@ test('ranking prioritizes verified overlap rather than one-sided favorites',()=>
   assert.ok(result.exploratory.every((x)=>!x.commonGround));
   assert.equal(result.exploratory[0].name,'Entity 3');
 });
+test('candidate includes raw Qloo affinities without overwriting the rank fairness heuristic',()=>{
+  const a=[{...item(1),affinity:0.82},{...item(2),affinity:0.3}];
+  const b=[{...item(1),affinity:0.17},{...item(2),affinity:0.4}];
+  const joint=[{...item(1),affinity:0.64}];
+  const rows=reconcile(a,b,joint);
+  const first=rows.agreement.find(x=>x.id===id(1));
+  assert.equal(first.groupAAffinity,0.82);
+  assert.equal(first.groupBAffinity,0.17);
+  assert.equal(first.jointAffinity,0.64);
+  assert.equal(first.score,100);
+  const second=rows.agreement.find(x=>x.id===id(2));
+  assert.equal(second.jointAffinity,null);
+  assert.equal(reconcile([item(1)],[item(1)],[]).agreement[0].groupAAffinity,null);
+});
 test('discovery mode gives more weight to joint Qloo rank while preserving mutual evidence',()=>{
   const sides=[item(1),item(2),item(3)];
   const joint=[item(2),item(1)];

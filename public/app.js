@@ -113,10 +113,13 @@ function reportText(plan){
     'Group A: '+plan.groupA.seeds.map(x=>x.name).join(', '),
     'Group B: '+plan.groupB.seeds.map(x=>x.name).join(', '),
     'Verified shared options: '+plan.overlapCount,'',
-    ...plan.candidates.map(x=>x.name+' / A #'+x.groupARank+' / B #'+x.groupBRank+' / heuristic '+x.score),
+    ...plan.candidates.map(x=>x.name+' / A #'+x.groupARank+' / B #'+x.groupBRank+' / rank balance '+x.score+
+      (typeof x.groupAAffinity==='number'?' / raw Qloo A affinity '+x.groupAAffinity:'')+
+      (typeof x.groupBAffinity==='number'?' / raw Qloo B affinity '+x.groupBAffinity:'')+
+      (typeof x.jointAffinity==='number'?' / raw Qloo joint affinity '+x.jointAffinity:'')),
     '','Exploratory (not independently verified for both):',
     ...plan.exploratory.map(x=>x.name+' / joint Qloo rank #'+x.discoveryRank),
-    '',plan.metadata.explanation,'Do not interpret these scores as Qloo affinities or probabilities.'
+    '',plan.metadata.explanation,'Rank-balance numbers are local heuristics. Raw Qloo affinity values, when present, are not satisfaction probabilities and should not be compared between separate queries.'
   ].join('\n');
 }
 function selectCandidate(index){
@@ -127,6 +130,27 @@ function selectCandidate(index){
   $('featured').hidden=false;
   $('featured-title').textContent=x.name;
   $('featured-evidence').textContent=x.evidence;
+  const anchorSection=$('featured-anchors');
+  anchorSection.replaceChildren();
+  for(const [label,seeds] of [['A',latest.groupA.seeds],['B',latest.groupB.seeds]]){
+    const line=el('p','anchor-line');
+    line.append(el('strong','',label+' / '),el('span','',seeds.map(y=>y.name).join(' · ')));
+    anchorSection.append(line);
+  }
+  const affinities=[['A / Qloo affinity',x.groupAAffinity],['B / Qloo affinity',x.groupBAffinity],['Joint Qloo affinity',x.jointAffinity]]
+    .filter(([,value])=>typeof value==='number'&&Number.isFinite(value));
+  const affinityPanel=$('featured-affinities');
+  affinityPanel.hidden=!affinities.length;
+  affinityPanel.replaceChildren();
+  if(affinities.length){
+    affinityPanel.append(el('p','affinity-heading','QLOO-REPORTED EVIDENCE'));
+    for(const [label,value] of affinities){
+      const line=el('div','affinity-entry');
+      line.append(el('span','',label),el('strong','',String(Number(value.toFixed(3)))));
+      affinityPanel.append(line);
+    }
+    affinityPanel.append(el('p','affinity-disclaimer','Raw affinity values are provided by Qloo. They are not percentages, satisfaction probabilities or directly comparable across independent queries.'));
+  }
   const bars=[];
   for(const [title,value,rank,color] of [
     ['Perspective A',x.groupAScore,x.groupARank,'first'],

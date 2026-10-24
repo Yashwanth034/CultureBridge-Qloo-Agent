@@ -89,6 +89,8 @@ Alternatively any Node.js hosting provider supporting server-side environment va
 - `POST /api/resolve`: JSON body with `groupA` and `groupB`; returns up to five Qloo entity choices per input for a human to confirm.
 - `POST /api/plan`: JSON `{"groupA":"movie: Interstellar, artist: Daft Punk","groupB":"movie: Spirited Away, artist: BTS","category":"movie"}`.
 
+The results panel distinguishes **our rank-balance heuristic** from optional **raw Qloo-reported affinities** for the two independent groups and joint query; those raw provider values are not percentages or predicted satisfaction and may not be comparable across queries. It also shows the actual cultural anchors used by each group.
+
 The backend enforces bounded inputs, no cross-origin form submissions, a conservative request rate cap, short outbound timeouts, backoff for 429/5xx, and a 10-minute in-memory Qloo response cache. The server's readiness check does not send upstream calls, to avoid consuming Qloo quota or leaking status details during frequent host health probes. If the optional combined-signal Qloo request has a transient provider error, the agent preserves independent two-sided evidence with a visible warning, rather than hiding valid verified matches. Exploratory results are never invented. The live smoke-check commands intentionally **fail** on this degraded response. No passwords, user accounts or profile persistence are required.
 
 ## Known limitations (don't overclaim)
