@@ -25,7 +25,7 @@ All four are equally weighted. The judges decide. There is no defensible externa
 
 ## Present local verification
 
-- 27 automated tests passed on Node 20 on October 25, 2026, including HTTP server security headers, basic UI file delivery, response contract, mocked Qloo calls, caching, missing credentials, bad IDs, the 404 no-result search case, two strategies, no-overlap honesty, and genuine two-list agreement sorting.
+- 29 automated tests passed on Node 20 on October 25, 2026, including HTTP server security headers, basic UI file delivery, response contract, mocked Qloo calls, caching, missing credentials, bad IDs, the 404 no-result search case, two strategies, no-overlap honesty, and genuine two-list agreement sorting.
 - JS syntax validation: passed.
 - Browser: the new immersive web interface, live Three.js render, Qloo identity-review stage, and results were inspected in Chrome. An independent **mock-only** local server supplied test entities and rankings during interaction checks. This does not verify real Qloo. The real server correctly reports that no event key is configured.
 - Public GitHub code repository has been created.
@@ -36,12 +36,12 @@ All four are equally weighted. The judges decide. There is no defensible externa
 After obtaining your key via Qloo's event Google Form:
 
 1. Set `QLOO_API_KEY` in your secure server environment; never paste the key into Devpost, GitHub, or public browser JavaScript.
-2. Check `GET /api/readiness`: HTTP 200 and `qlooConfigured:true` prove only a key was supplied. HTTP 503 means the hosted instance is not configured. Run `npm run verify:qloo` (then `-- artist` and `-- book`) on the real-key environment before promising the demo works.
+2. Check `GET /api/readiness`: HTTP 200 and `qlooConfigured:true` prove only a key was supplied. HTTP 503 means the hosted instance is not configured. Run `npm run verify:qloo` (checks movie, artist and book) on the real-key environment before promising the demo works.
 3. Run 3 scenario briefs on the public host, at least one each: movie, artist, book.
 4. Confirm `GET /search` returns valid UUIDs, categories map correctly, and typed input selects the intended entity.
 5. Confirm `GET /v2/insights` returns usable entities for both independent sides and for the joint query, that results vary with input, and that the app completes in a reasonable time.
 6. Test wrong key (rejected without leaking it), malformed names, no overlap, missing results, and an ambiguous seed.
-7. Confirm HTTPS website is publicly accessible in incognito, on desktop and mobile, without login and without browser console errors.
+7. Run `npm run verify:deploy -- https://YOUR-HOST.onrender.com` to check actual hosting and key presence, then `npm run verify:deploy -- https://YOUR-HOST.onrender.com --live` to test the public Qloo entity review and Insights workflow for movie, music and book. Confirm the app also works in incognito on desktop/mobile, without login or browser console errors.
 
 ## Submission gates
 

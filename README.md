@@ -70,10 +70,11 @@ Each verification makes actual upstream `/search` and `/v2/insights` requests wi
 A `render.yaml` is provided for a Node web service on Render. Publish this repository as **public** on GitHub, connect it to your Render account, and set secret `QLOO_API_KEY` in Render's private environment settings. Deploy, then check the public site in one command:
 
 ```bash
-npm run verify:deploy -- https://YOUR-HOST.onrender.com
+npm run verify:deploy -- https://YOUR-HOST.onrender.com          # static files, headers, Qloo key presence
+npm run verify:deploy -- https://YOUR-HOST.onrender.com --live   # full Qloo review + insights, all 3 categories
 ```
 
-This checks actual HTTP responses, assets, app identity, security headers and secret presence. It does **not** call Qloo. You must still run the live smoke test and interact with the public app.
+The default command checks HTTP responses, assets, app identity, security headers and secret presence; it does **not** call Qloo. The **`--live` option runs real `/api/resolve` and `/api/plan` requests through the hosted application** for movie, artist, and book inputs, verifies that users can review entity IDs, and requires independent Qloo rankings. An overlap is *not* required for the check to succeed. No Qloo key appears in the requests or output. Also test the browser UI anonymously.
 
 Also check `https://YOUR-HOST/api/readiness` returns HTTP 200 and `qlooConfigured:true`, and run real plans in a private browsing window. `/api/readiness` returns HTTP 503 when the key is missing, so the host should not claim an unconfigured deployment is healthy. A ready status means **only that a key is present**, not that the remote Qloo service accepted it: first run `npm run verify:qloo` and verify the public browser flow end to end.
 

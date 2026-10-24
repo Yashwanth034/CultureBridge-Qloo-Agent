@@ -78,7 +78,7 @@ https://github.com/Yashwanth034/CultureBridge-Qloo-Agent
 - [ ] Confirm eligible country, adulthood, and participation rules
 - [ ] Request event key via the [official Qloo Agentic Hackathon Google Form](https://forms.gle/zz12orkLHTAneLGz6); enter personal details yourself and accept the terms, then store the issued key in the hosting secret manager, never in the repository
 - [ ] Verify real Qloo requests (search and insights) with `npm run verify:qloo` and actual private event key, correct status and response structure
-- [ ] Public website runs correctly for an anonymous judge (no password, no localhost); run `npm run verify:deploy -- https://YOUR-HOST.onrender.com`
+- [ ] Public website runs correctly for an anonymous judge (no password, no localhost); run `npm run verify:deploy -- https://YOUR-HOST.onrender.com --live` for the full public Qloo search → review → recommendation path
 - [x] Repository is public and has README, all source, and MIT LICENSE committed. Check that GitHub detects the license in the repository About area.
 - [ ] Test responsive UI, bad inputs, and the three output categories on published site
 - [ ] Check public demo/source URLs in an incognito session
