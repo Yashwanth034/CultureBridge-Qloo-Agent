@@ -11,7 +11,7 @@ test('real two-stage app retains all form, review and results controls',async()=
     'empty-state','loading-state','results','result-title','result-subtitle','cards','explore-section','explore-cards',
     'warnings','trace','methodology','api-banner','api-message','export','featured','featured-bars',
     'counterfactual','counterfactual-rows','trust','count','error-state','retry','back-to-edit','new-brief',
-    'no-overlap','no-overlap-title','no-overlap-copy','try-category','refine-seeds','shared-results','featured-anchors','featured-affinities','featured-contributions','cancel-request']) {
+    'no-overlap','no-overlap-title','no-overlap-copy','try-category','refine-seeds','shared-results','featured-anchors','featured-affinities','featured-contributions','cancel-request','jump-to-tastes']) {
     assert.match(html,new RegExp('id="'+id+'"'),'Missing '+id);
   }
   for(const value of ['value="movie"','value="artist"','value="book"','value="balanced"','value="discovery"']) assert.ok(html.includes(value));
@@ -29,6 +29,9 @@ test('responsive workspace has meaningful mobile layouts, focus, reduced motion'
   assert.match(css,/\.taste-lab/);
   assert.match(css,/\.rank-item/);
   assert.match(css,/\.match-review/);
+  assert.match(css,/\.taste-stage\{order:2;min-height:180px\}/);
+  assert.match(css,/\.profile-b\{order:1\}/);
+  assert.match(css,/\.intro-cta/);
 });
 test('app loads local behavior with no inline script or unsafe HTML',async()=>{
   const html=await source('public/index.html');
@@ -44,6 +47,7 @@ test('app loads local behavior with no inline script or unsafe HTML',async()=>{
   assert.match(js,/select\.value\|\|null/);
   assert.match(js,/updateReviewEligibility/);
   assert.match(js,/scrollIntoView/);
+  assert.match(js,/\$\('jump-to-tastes'\)\.addEventListener\('click'/);
   assert.match(js,/relative-rank fairness index/);
   assert.match(js,/affinity-disclaimer/);
   assert.match(js,/QLOO-REPORTED EVIDENCE/);

@@ -50,6 +50,15 @@ function makeHarness(){
 }
 const badResponse={ok:false,json:async()=>({error:'Temporary failure'})};
 
+test('hero jump opens the existing taste studio and focuses the first input',()=>{
+  const {get}=makeHarness();
+  let scrolled=false,focused=false;
+  get('studio').scrollIntoView=options=>{scrolled=options.block==='start';};
+  get('group-a').focus=options=>{focused=options.preventScroll===true;};
+  get('jump-to-tastes').events.get('click')();
+  assert.equal(scrolled,true);
+  assert.equal(focused,true);
+});
 test('cancel immediately aborts the in-flight request and ignores its later response',async()=>{
   const {get,requests,flush}=makeHarness();
   get('bridge-form').events.get('submit')({preventDefault(){}});

@@ -315,6 +315,10 @@ function goBack(){cancelPending();stage('empty-state');$('group-a').focus();}
 $('bridge-form').addEventListener('submit',event=>{event.preventDefault();checkMatches();});
 $('generate').addEventListener('click',makePlan);
 $('cancel-request').addEventListener('click',goBack);
+$('jump-to-tastes').addEventListener('click',()=>{
+  $('studio').scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+  $('group-a').focus({preventScroll:true});
+});
 $('review-a').addEventListener('change',updateReviewEligibility);
 $('review-b').addEventListener('change',updateReviewEligibility);
 $('back-to-edit').addEventListener('click',goBack);
