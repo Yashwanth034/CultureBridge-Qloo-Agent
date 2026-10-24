@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#101329">
+  <meta name="description" content="CultureBridge: the Qloo-powered cultural mediator for finding what different people might genuinely enjoy together.">
+  <title>CultureBridge — Find the space between our tastes</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div class="halo halo-one" aria-hidden="true"></div>
+  <div class="halo halo-two" aria-hidden="true"></div>
+  <header class="nav container">
+    <a class="brand" href="/" aria-label="CultureBridge home"><span class="brand-icon">✳</span> culture<span class="brand-light">bridge</span><span class="brand-period">.</span></a>
+    <div class="nav-end"><span class="live-indicator"><span class="live-dot"></span> POWERED BY QLOO TASTE AI</span><a class="nav-link" href="#how">How it works <span aria-hidden="true">↗</span></a></div>
+  </header>
+  <main>
+    <section class="hero container">
+      <div class="hero-main">
+        <p class="eyebrow"><span class="mini-sparkle">✴</span> CULTURAL INTELLIGENCE, MADE HUMAN</p>
+        <h1>Different tastes.<br><span class="gradient-text">One great night.</span></h1>
+        <p class="hero-copy">An AI-powered taste mediator for the moments when one person wants indie cinema and the other wants K-pop. Find the overlap neither of you could see.</p>
+        <div class="hero-marks"><span><span class="mark">✓</span> Two independent taste profiles</span><span><span class="mark">✓</span> Evidence, not guesses</span><span><span class="mark">✓</span> Built on Qloo's taste graph</span></div>
+      </div>
+      <div class="hero-art" aria-label="Two taste constellations meeting in the middle" role="img">
+        <span class="glow-a"></span><span class="glow-b"></span>
+        <div class="orbit orbit-a"><span class="orbit-dot"></span></div>
+        <div class="orbit orbit-b"><span class="orbit-dot"></span></div>
+        <div class="art-label label-a">YOUR WORLD <span>✦</span></div>
+        <div class="art-label label-b">THEIR WORLD <span>✦</span></div>
+        <div class="art-center"><span class="center-spark">✳</span><strong>The sweet<br>spot</strong></div>
+        <div class="art-caption">WHERE CULTURE CONNECTS</div>
+      </div>
+    </section>
+    <section class="workspace container" id="try">
+      <div class="panel input-panel">
+        <div class="panel-heading">
+          <div><p class="eyebrow muted">01 / THE BRIEF</p><h2>Let's find your common ground.</h2><p>Give each group up to three things they love. The agent will do the taste-mapping.</p></div>
+          <span class="heading-chip">NO ACCOUNT REQUIRED</span>
+        </div>
+        <div class="api-banner" id="api-banner" role="status"><span class="status-symbol">◌</span><span id="api-message">Checking live Qloo connection...</span></div>
+        <form id="bridge-form">
+          <div class="groups">
+            <div class="group-input">
+              <div class="field-title"><span class="avatar avatar-a">A</span><div><label for="group-a">First taste profile</label><small>What does the first person or group enjoy?</small></div></div>
+              <textarea id="group-a" maxlength="500" rows="3" required spellcheck="false" placeholder="movie: Interstellar, artist: Daft Punk">movie: Interstellar, artist: Daft Punk</textarea>
+              <div class="field-footer"><span class="pin pin-a"></span> MOVIES · MUSIC ARTISTS · BOOKS</div>
+            </div>
+            <div class="between" aria-hidden="true"><span>+</span></div>
+            <div class="group-input">
+              <div class="field-title"><span class="avatar avatar-b">B</span><div><label for="group-b">Second taste profile</label><small>What does the other person or group enjoy?</small></div></div>
+              <textarea id="group-b" maxlength="500" rows="3" required spellcheck="false" placeholder="movie: Spirited Away, artist: BTS">movie: Spirited Away, artist: BTS</textarea>
+              <div class="field-footer"><span class="pin pin-b"></span> BE SPECIFIC FOR BETTER MATCHES</div>
+            </div>
+          </div>
+          <div class="bottom-form">
+            <div><label class="input-label" for="category">Find shared...</label><select id="category"><option value="movie">🎬 Movies to watch</option><option value="artist">♫ Artists to listen to</option><option value="book">▤ Books to explore</option></select></div>
+            <button id="generate" class="primary-button" type="submit"><span>Find the common ground</span> <span class="button-arrow" aria-hidden="true">↗</span></button>
+          </div>
+          <div class="presets"><span>TRY AN EXAMPLE</span><button type="button" data-preset="cinema">Movie night ↗</button><button type="button" data-preset="music">Opposite playlists ↗</button><button type="button" data-preset="books">Book club ↗</button></div>
+        </form>
+        <p class="form-note">Tip: prefix names with <code>movie:</code>, <code>artist:</code>, or <code>book:</code> for accurate Qloo entity matching. Your inputs aren't saved.</p>
+      </div>
+    </section>
+    <section class="results container" id="results" hidden aria-live="polite" aria-busy="false">
+      <div class="results-heading"><div><p class="eyebrow">02 / YOUR CULTURAL BRIDGE</p><h2 id="result-title">Where your worlds overlap.</h2><p id="result-subtitle"></p></div><button class="subtle-button" id="export" type="button">Copy evidence report <span aria-hidden="true">↗</span></button></div>
+      <div class="summary-strip">
+        <div><span class="strip-label">TRUST LEVEL</span><strong id="trust">—</strong></div>
+        <div><span class="strip-label">VERIFIED OVERLAPS</span><strong id="count">—</strong></div>
+        <div><span class="strip-label">EVIDENCE SOURCE</span><strong>Qloo · Live</strong></div>
+      </div>
+      <div id="warnings" class="warnings" hidden></div>
+      <div id="cards" class="cards"></div>
+      <div class="result-section" id="explore-section" hidden><h3>Worth exploring together <span class="tag">UNVERIFIED INTERSECTION</span></h3><p>These appear in Qloo's joint-signal discovery, but weren't independently returned for both groups. They're experiments, not confirmed mutual favorites.</p><div id="explore-cards" class="explore-grid"></div></div>
+      <details class="evidence" open><summary>Agent decision trail <span class="details-arrow">↘</span></summary><ol id="trace"></ol><p id="methodology"></p></details>
+    </section>
+    <section class="how container" id="how">
+      <p class="eyebrow">THE IDEA BEHIND THE ENGINE</p><h2>Not another recommendation list.<br><span class="text-muted">A way to meet in the middle.</span></h2>
+      <div class="steps">
+        <article><span class="step-num">01</span><div class="step-symbol a-symbol">◎</div><h3>Learn both sides</h3><p>Each group's favorites are matched to real Qloo entities. Ambiguous matches are surfaced so you're never silently given fabricated taste IDs.</p></article>
+        <article><span class="step-num">02</span><div class="step-symbol b-symbol">⌘</div><h3>Investigate separately</h3><p>Independent Qloo Insights requests reveal each group's ranked tastes. A third request scouts the joint taste signal.</p></article>
+        <article><span class="step-num">03</span><div class="step-symbol c-symbol">✳</div><h3>Mediate fairly</h3><p>We reward candidates both sides receive and penalize one-sided picks. Every score has inspectable source ranks, not a made-up AI probability.</p></article>
+      </div>
+    </section>
+  </main>
+  <footer class="footer container"><span class="brand small">✳ culturebridge<span class="brand-period">.</span></span><span>An independent project built for the Qloo Agentic Hackathon · 2026</span><a href="https://qloo.devpost.com/" target="_blank" rel="noopener noreferrer">Hackathon ↗</a></footer>
+</body>
+</html>

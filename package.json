@@ -1,0 +1,14 @@
+{
+  "name": "culturebridge-qloo-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "An evidence-first two-audience cultural bridge agent powered by Qloo",
+  "engines": {"node": ">=20"},
+  "scripts": {
+    "start": "node src/server.mjs",
+    "dev": "node --watch src/server.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "check": "node --check src/server.mjs && node --check src/agent.mjs && node --check src/qloo.mjs && node --check public/app.js"
+  }
+}

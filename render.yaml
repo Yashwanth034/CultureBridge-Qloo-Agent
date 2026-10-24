@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: culturebridge-qloo-agent
+    runtime: node
+    plan: free
+    buildCommand: npm install --omit=dev
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: QLOO_API_KEY
+        sync: false
