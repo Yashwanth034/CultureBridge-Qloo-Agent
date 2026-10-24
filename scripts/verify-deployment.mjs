@@ -3,6 +3,7 @@
  * Run: npm run verify:deploy -- https://YOUR-APP.onrender.com
  * For live Qloo integration, separately run "npm run verify:qloo" with the key
  * and use both steps of the public app in an incognito browser.
+ * A cold-starting free host gets bounded homepage wake-up retries (max 85s).
  * Run with --live to exercise real public /api/resolve and /api/plan for
  * movie, artist and book; no API key ever leaves the server.
  */
@@ -76,7 +77,32 @@ export async function verifyHostedFlow(base,{fetchImpl=fetch,categories=liveScen
   }
   return results;
 }
-export async function verifyDeployment(url,{fetchImpl=fetch,live=false}={}) {
+const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+export async function fetchColdStartHome(base,{fetchImpl=fetch,sleepImpl=sleep}={}){
+  // Free hosting can restart from idle. Retry only the first public homepage
+  // request, on network timeouts and transient 502/503/504 responses.
+  // A missing Qloo key at /api/readiness must never be treated as a cold start.
+  const expires=Date.now()+85000;
+  for(let attempt=0;attempt<40;attempt++){
+    const timeLeft=expires-Date.now();
+    if(timeLeft<=0)break;
+    let response;
+    try{
+      response=await fetchImpl(new URL('/',base),{
+        signal:AbortSignal.timeout(Math.min(12000,timeLeft))
+      });
+    }catch(error){
+      if(attempt===39)throw new Error('Public host did not respond after repeated wake-up attempts.');
+    }
+    if(response && ![502,503,504].includes(response.status))return response;
+    if(attempt===39)break;
+    const remaining=expires-Date.now();
+    if(remaining<=0)break;
+    await sleepImpl(Math.min(2000,remaining));
+  }
+  throw new Error('Public host could not wake or responded with repeated gateway errors.');
+}
+export async function verifyDeployment(url,{fetchImpl=fetch,live=false,sleepImpl=sleep}={}) {
   const base=validateBase(url);
   const checks=[
     ['/',200,'text/html'],
@@ -88,7 +114,9 @@ export async function verifyDeployment(url,{fetchImpl=fetch,live=false}={}) {
   ];
   const report=[];
   for(const [path,expected,contentType] of checks){
-    const response=await fetchImpl(new URL(path,base),{signal:AbortSignal.timeout(12000)});
+    const response=path==='/'
+      ?await fetchColdStartHome(base,{fetchImpl,sleepImpl})
+      :await fetchImpl(new URL(path,base),{signal:AbortSignal.timeout(12000)});
     const mime=String(response.headers.get('content-type')||'').toLowerCase();
     if(response.status!==expected || !mime.includes(contentType)) {
       throw new Error(path+' returned HTTP '+response.status+' ('+(mime||'unknown type')+').');

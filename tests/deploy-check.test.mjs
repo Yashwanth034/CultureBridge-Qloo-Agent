@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {verifyDeployment,verifyHostedFlow} from '../scripts/verify-deployment.mjs';
+import {verifyDeployment,verifyHostedFlow,fetchColdStartHome} from '../scripts/verify-deployment.mjs';
 import {createAppServer} from '../src/server.mjs';
 
 function fakeSite({configured=true,broken=null}={}){
@@ -23,6 +23,37 @@ test('deployment preflight checks every public asset and readiness',async()=>{
   const result=await verifyDeployment('https://culturebridge.example/',{fetchImpl:fakeSite()});
   assert.equal(result.host,'culturebridge.example');
   assert.equal(result.checksPassed.length,6);
+});
+test('deployment checker tolerates a cold-starting homepage without masking readiness failure',async()=>{
+  let homeAttempts=0,readinessCalls=0,retries=0;
+  const fetchImpl=async url=>{
+    const path=new URL(url).pathname;
+    if(path==='/'){
+      homeAttempts++;
+      if(homeAttempts===1)throw new Error('temporary connection reset');
+      if(homeAttempts===2)return new Response('',{status:503,headers:{'content-type':'text/html'}});
+    }
+    if(path==='/api/readiness')readinessCalls++;
+    return fakeSite()(url);
+  };
+  const report=await verifyDeployment('https://culturebridge.example/',{
+    fetchImpl,sleepImpl:async()=>{retries++;}
+  });
+  assert.equal(report.checksPassed.length,6);
+  assert.equal(homeAttempts,3);
+  assert.equal(retries,2);
+  assert.equal(readinessCalls,1);
+  const response=await fetchColdStartHome(new URL('https://culturebridge.example/'),{
+    fetchImpl:async()=>new Response('not found',{status:404,headers:{'content-type':'text/html'}}),
+    sleepImpl:async()=>{throw Error('Should not retry permanent errors');}
+  });
+  assert.equal(response.status,404);
+  let attempts=0;
+  const neverReady=async()=>{attempts++;return new Response('',{status:503});};
+  await assert.rejects(fetchColdStartHome(new URL('https://culturebridge.example/'),{
+    fetchImpl:neverReady,sleepImpl:async()=>{}
+  }),/could not wake/);
+  assert.equal(attempts,40);
 });
 test('optional public live Qloo check verifies reviewed IDs and all three categories',async()=>{
   const requestLog=[];
