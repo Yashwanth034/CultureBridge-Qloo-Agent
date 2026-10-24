@@ -27,7 +27,7 @@ Without Qloo, there are no entity IDs or independent cross-domain taste rankings
 ## Requirements
 
 - Node.js 20 or later (zero third-party **server-side** npm dependencies; optional Three.js is served from a version-pinned CDN with a CSS fallback).
-- A Qloo **hackathon event API key** from the [Qloo API key form](https://docs.qloo.com/reference/qloo-llm-hackathon-developer-guide#getting-your-api-key).
+- A Qloo **hackathon event API key** obtained through the [official 2026 Agentic Hackathon request form](https://forms.gle/zz12orkLHTAneLGz6) (also linked from [Qloo's event developer guide](https://docs.qloo.com/reference/qloo-llm-hackathon-developer-guide#getting-your-api-key)). The organizer issues keys by email after approval. Do not use the older LLM Hackathon registration form.
 - The event key works **only** with `https://hackathon.api.qloo.com`. The backend supplies `X-Api-Key`. Never put the key into HTML, git or frontend configuration.
 
 ## Run locally

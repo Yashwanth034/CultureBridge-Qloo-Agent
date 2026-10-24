@@ -51,7 +51,8 @@ After obtaining your key via Qloo's event Google Form:
 - [x] Initial automated local tests and browser visual smoke test passed.
 - [x] Deployment readiness endpoint and Render health check configured.
 - [x] Live Qloo and public URL verification scripts tested with mocks, but not yet against an event key or public deployment.
-- [ ] Qloo event key configured and **real** end-to-end response verified.
+- [ ] User completes the official 2026 Agentic Hackathon [Qloo key request](https://forms.gle/zz12orkLHTAneLGz6), including personal details and agreeing to the API rules; no key found in the connected Gmail search at last check.
+- [ ] Qloo event key configured **privately** and **real** end-to-end responses verified.
 - [ ] Public app deployed and accessed anonymously, end to end.
 - [ ] Final live environment tested for all three categories and strategies.
 - [ ] User confirms age, residence eligibility, and event rules.
