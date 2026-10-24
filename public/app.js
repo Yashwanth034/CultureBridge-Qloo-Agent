@@ -21,7 +21,7 @@ function showError(message) {
   results.hidden=false;results.setAttribute('aria-busy','false');
   $('result-title').textContent='We need one more ingredient.';
   $('result-subtitle').textContent=message;
-  $('warnings').hidden=true;
+  $('warnings').hidden=true;$('counterfactual').hidden=true;
   $('cards').replaceChildren();$('explore-section').hidden=true;
   document.querySelector('.summary-strip').hidden=true;
   document.querySelector('.evidence').hidden=true;
@@ -34,6 +34,9 @@ function reportText(plan) {
     'Evidence source: Live Qloo Insights API',
     'State: '+plan.state,
     'Category: '+plan.category,
+    'Mediation strategy: '+plan.strategy,
+    'Group A unilateral pick: '+(plan.comparison.unmediatedA?.name||'none'),
+    'Group B unilateral pick: '+(plan.comparison.unmediatedB?.name||'none'),
     'First profile: '+plan.groupA.seeds.map((x)=>x.name+' ('+x.type+')').join(', '),
     'Second profile: '+plan.groupB.seeds.map((x)=>x.name+' ('+x.type+')').join(', '),
     '',
@@ -91,6 +94,16 @@ function render(plan) {
   $('trust').textContent=verified?'TWO-SIDED EVIDENCE':'EXPLORATORY ONLY';
   $('count').textContent=String(plan.overlapCount);
   $('cards').replaceChildren(...plan.candidates.map(candidateCard));
+  const counter=$('counterfactual');
+  const baseline=plan.comparison||{};
+  const alternatives=[['GROUP A ACTS ALONE',baseline.unmediatedA],['GROUP B ACTS ALONE',baseline.unmediatedB]];
+  counter.hidden=!(baseline.unmediatedA||baseline.unmediatedB);
+  $('counterfactual-rows').replaceChildren(...alternatives.filter((x)=>x[1]).map(([label,option])=>{
+    const block=make('div','counterfactual-block');
+    block.append(make('span','strip-label',label),make('strong','',option.name),
+      make('span','counterfactual-notice',option.acknowledgedByOther?'Also appears in the other group’s Qloo list':'Not found in the other group’s Qloo top list'));
+    return block;
+  }));
   $('explore-section').hidden=!plan.exploratory.length;
   $('explore-cards').replaceChildren(...plan.exploratory.map((x)=>{
     const el=make('div','explore-card');
@@ -98,9 +111,11 @@ function render(plan) {
     return el;
   }));
   const unmatched=[...plan.groupA.unmatched,...plan.groupB.unmatched];
-  const warnings=$('warnings');
-  warnings.hidden=!unmatched.length;
-  warnings.textContent=unmatched.length?'Could not match: '+unmatched.join(', ')+'. Results use only resolved seeds.':'';
+  const approx=[...(plan.groupA.approximate||[]),...(plan.groupB.approximate||[])];
+  const warningMessages=[];
+  if(unmatched.length)warningMessages.push('Could not match: '+unmatched.join(', ')+'. Results use only resolved seeds.');
+  if(approx.length)warningMessages.push('Approximate Qloo name matches: '+approx.map((x)=>x.input+' → '+x.name).join('; ')+'. Check these names before trusting the plan.');
+  const warnings=$('warnings');warnings.hidden=!warningMessages.length;warnings.textContent=warningMessages.join(' ');
   const trace=$('trace');
   trace.replaceChildren(...plan.trace.map((x)=>make('li','',x)));
   $('methodology').textContent=plan.metadata.explanation;
@@ -112,7 +127,7 @@ form.addEventListener('submit',async(e)=>{
   const old=label.textContent;label.textContent='Mapping the taste graph…';
   results.setAttribute('aria-busy','true');
   try {
-    const payload={groupA:$('group-a').value,groupB:$('group-b').value,category:$('category').value};
+    const payload={groupA:$('group-a').value,groupB:$('group-b').value,category:$('category').value,strategy:$('strategy').value};
     const response=await fetch('/api/plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     let data;try{data=await response.json()}catch{throw new Error('Unexpected response from application server.')}
     if(!response.ok)throw new Error(data.error||'Unable to complete the Qloo requests.');

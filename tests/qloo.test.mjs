@@ -22,6 +22,17 @@ test('Qloo requests target event origin, pass server-only key, cache and exclude
   assert.match(calls[1].url,/filter.exclude.entities/);
   assert.equal(result[0].name,'Dune');
 });
+test('zero search results from Qloo are not a fatal API error',async()=>{
+  const client=new QlooClient({apiKey:'dummy-key',minGapMs:0,fetchImpl:async()=>({ok:false,status:404})});
+  assert.deepEqual(await client.search('unfindable band','artist'),[]);
+});
+test('Qloo plain entity type is normalized while malformed IDs are excluded',()=>{
+  const all=extractEntities({results:{entities:[{entity_id:ID,name:'Dune',type:'urn:entity:movie'},
+    {entity_id:ID,name:'Duplicated Dune',type:'movie'},
+    {entity_id:'invalid',name:'Fake',type:'movie'}]}});
+  assert.equal(all.length,2);
+  assert.deepEqual(all.map((x)=>x.type),['movie','movie']);
+});
 test('no key rejects rather than silently pretending to use Qloo',async()=>{
   const client=new QlooClient({apiKey:'',fetchImpl:async()=>{throw Error('not reached')}});
   await assert.rejects(client.search('Dune'),/not configured/);

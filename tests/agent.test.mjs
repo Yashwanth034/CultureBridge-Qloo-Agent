@@ -18,6 +18,16 @@ test('ranking prioritizes verified overlap rather than one-sided favorites',()=>
   assert.ok(result.exploratory.every((x)=>!x.commonGround));
   assert.equal(result.exploratory[0].name,'Entity 3');
 });
+test('discovery mode gives more weight to joint Qloo rank while preserving mutual evidence',()=>{
+  const sides=[item(1),item(2),item(3)];
+  const joint=[item(2),item(1)];
+  const fair=reconcile(sides,sides,joint,6,'balanced');
+  const discovery=reconcile(sides,sides,joint,6,'discovery');
+  assert.equal(fair.agreement[0].name,'Entity 1');
+  assert.equal(discovery.agreement[0].name,'Entity 2');
+  assert.ok(discovery.agreement.every((x)=>x.commonGround));
+  assert.throws(()=>reconcile(sides,sides,joint,6,'invalid'),/Unknown mediation strategy/);
+});
 test('no overlap never produces counterfeit consensus',()=>{
   const result=reconcile([item(1)],[item(2)],[item(3)]);
   assert.equal(result.agreement.length,0);
@@ -37,6 +47,25 @@ test('agent resolves identities and makes independent and joint probes',async()=
   assert.equal(calls.filter((x)=>x[0]==='insights').length,3);
   assert.equal(plan.groupA.seeds[0].name,'Arrival');
   assert.equal(plan.trace.length,5);
+});
+test('agent autonomously expands full ranked lists when initial searches have no overlap',async()=>{
+  const calls=[];
+  const client={
+    async search(name){return [{id:id(name==='Dune'?1:2),name,type:'movie'}];},
+    async insights(category,ids,take=40){
+      calls.push({ids,take});
+      if(ids.length===2)return [item(501)];
+      const start=ids[0]===id(1)?100:200;
+      const rows=Array.from({length:40},(_,i)=>item(start+i));
+      return take===50?[...rows,item(501)]:rows;
+    }
+  };
+  const result=await buildBridge({groupA:'Dune',groupB:'Barbie',category:'movie'},client);
+  assert.equal(result.state,'grounded-overlap');
+  assert.equal(result.candidates[0].name,'Entity 501');
+  assert.equal(result.metadata.expandedSearch,true);
+  assert.deepEqual(calls.map((x)=>x.take),[40,40,40,50,50]);
+  assert.ok(result.trace.some((stage)=>stage.includes('expanded Qloo')));
 });
 test('agent reports exploration-only when there is no agreement',async()=>{
   const client={

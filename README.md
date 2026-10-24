@@ -4,6 +4,10 @@
 
 **Built for the [Qloo Agentic Hackathon 2026](https://qloo.devpost.com/)**. CultureBridge helps community event coordinators, friendship groups, and campus club organizers choose film, music, or book experiences that neither audience has to sacrifice their tastes for.
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Yashwanth034/CultureBridge-Qloo-Agent)
+
+> **Deployment is not automatic.** This button opens a review flow in your own Render account. Enter your private Qloo event key as the `QLOO_API_KEY` environment variable there. Until the key is configured, the application intentionally shows an informative setup error rather than pretending to use Qloo.
+
 ## What makes it an agent
 
 CultureBridge is a transparent five-step tool-using agent, not an ungrounded chat completion:
@@ -12,7 +16,7 @@ CultureBridge is a transparent five-step tool-using agent, not an ungrounded cha
 2. **Resolve:** retrieve Qloo entity UUIDs using live **GET /search**. An unresolved seed is omitted and reported; it is never fabricated.
 3. **Scout independently:** use **GET /v2/insights** separately with A and B's tastes as signals, requesting up to 40 ranked candidates each.
 4. **Explore jointly:** query **GET /v2/insights** with both groups' taste signals to discover potential cultural bridges that individual list intersections may miss.
-5. **Evaluate/mediate:** compute evidence-backed two-sided overlaps, rerank by maximin fairness, and explicitly distinguish verified agreement from exploratory joint-only suggestions. Generate an inspectable decision trail.
+5. **Evaluate/mediate:** compute evidence-backed two-sided overlaps, rerank by maximin fairness, or select a discovery-focused compromise that also rewards the joint Qloo result. If the initial independent result sets are full but disjoint, widen the Qloo search automatically. Distinguish verified agreement from exploratory joint-only suggestions. Show what each group would have selected alone, and provide an inspectable decision trail.
 
 The app makes **no claim that relative-rank balance is an upstream affinity score, probability, or guarantee that participants will like an item**. It exposes each group's Qloo-derived ranking for transparency.
 
@@ -34,7 +38,7 @@ export PORT=4177
 node src/server.mjs
 ```
 
-Open **http://localhost:4177/** in a browser. Choose Movie night, Opposite playlists or Book club, edit the two groups' examples, then submit. The app reports a visible error until the key is configured. It never pretends mock data is live.
+Open **http://localhost:4177/** in a browser. Choose Movie night, Opposite playlists or Book club, edit the two groups' examples, select **Fair to both groups** or **Discover something new**, then submit. The app reports a visible error until the key is configured. It never pretends mock data is live.
 
 For verification:
 

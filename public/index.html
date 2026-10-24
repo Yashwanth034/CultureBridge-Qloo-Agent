@@ -58,6 +58,7 @@
           </div>
           <div class="bottom-form">
             <div><label class="input-label" for="category">Find shared...</label><select id="category"><option value="movie">🎬 Movies to watch</option><option value="artist">♫ Artists to listen to</option><option value="book">▤ Books to explore</option></select></div>
+            <div><label class="input-label" for="strategy">Our compromise style</label><select id="strategy"><option value="balanced">⚖ Fair to both groups</option><option value="discovery">✳ Discover something new</option></select></div>
             <button id="generate" class="primary-button" type="submit"><span>Find the common ground</span> <span class="button-arrow" aria-hidden="true">↗</span></button>
           </div>
           <div class="presets"><span>TRY AN EXAMPLE</span><button type="button" data-preset="cinema">Movie night ↗</button><button type="button" data-preset="music">Opposite playlists ↗</button><button type="button" data-preset="books">Book club ↗</button></div>
@@ -73,6 +74,7 @@
         <div><span class="strip-label">EVIDENCE SOURCE</span><strong>Qloo · Live</strong></div>
       </div>
       <div id="warnings" class="warnings" hidden></div>
+      <div class="counterfactual" id="counterfactual" hidden><p class="eyebrow">WHAT CHANGES WHEN WE MEDIATE?</p><h3>Two individual favorites. One fairer decision.</h3><div id="counterfactual-rows" class="counterfactual-rows"></div><p class="counterfactual-disclaimer">Being ranked for both groups is evidence of broader alignment in Qloo’s data, not proof every person will like it.</p></div>
       <div id="cards" class="cards"></div>
       <div class="result-section" id="explore-section" hidden><h3>Worth exploring together <span class="tag">UNVERIFIED INTERSECTION</span></h3><p>These appear in Qloo's joint-signal discovery, but weren't independently returned for both groups. They're experiments, not confirmed mutual favorites.</p><div id="explore-cards" class="explore-grid"></div></div>
       <details class="evidence" open><summary>Agent decision trail <span class="details-arrow">↘</span></summary><ol id="trace"></ol><p id="methodology"></p></details>

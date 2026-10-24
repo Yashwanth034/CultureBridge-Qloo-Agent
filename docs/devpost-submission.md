@@ -18,14 +18,14 @@ Planning an activity across different tastes often ends in a boring compromise: 
 
 CultureBridge listens to **two independent audience taste profiles**. Each person or group can contribute movies, music artists, or books they enjoy. A Qloo-powered agent resolves real cultural entities, gathers separate recommendation lists for each group, and scouts the combined taste space. It prioritizes opportunities independently supported for **both** groups. Each recommendation shows the two original list positions and a transparent balance ranking. When there is no independent overlap, it doesn't pretend there is one: joint-signal discoveries are marked exploratory.
 
-Users can switch between movie-night, shared music, and book-club outcomes. One click exports an evidence report that explains what was considered.
+Users can switch between movie-night, shared music, and book-club outcomes. They can choose a fairness-first or discovery-first mediation style, and compare the outcome against each group’s unmediated first choice to visualize how a taste-equity approach changes the decision. One click exports an evidence report that explains what was considered.
 
 ## How we built it
 
 - **Live Qloo /search** resolves typed cultural signals into Qloo entities.
 - **Live Qloo /v2/insights** makes three sequential queries (group A, group B, and both together), with documented filter/type, excluded input IDs, and explainability request.
-- **Agentic five-phase workflow:** validate → resolve → independent scout → joint explore → deterministic fairness evaluation.
-- **Fairness objective:** independently returned picks earn a conservative, relative rank-based maximin score. Picks found only in the joint set stay exploratory. Relative rankings are never labeled probabilities or Qloo's own affinity.
+- **Adaptive agentic workflow:** validate → resolve → independently scout → jointly explore → expand Qloo searches when first-pass overlap is empty → deterministic fairness evaluation.
+- **Fairness objective:** independently returned picks earn a conservative, relative rank-based maximin score. Discovery mode also rewards strength in a separate joint Qloo ranking, while requiring independent support from both groups. Picks found only in the joint set stay exploratory. Relative rankings are never labeled probabilities or Qloo's own affinity.
 - **Node 20+ server**, server-only event key, no third-party runtime dependencies, rate control, retries and caching.
 - **Responsive interface** using accessible HTML/CSS/JavaScript with explanations and an evidence-export control.
 
@@ -54,7 +54,7 @@ Support three or more audience groups, explicit venue and licensing constraints,
 
 ## Repository
 
-[INSERT PUBLIC GITHUB REPOSITORY LINK HERE]
+https://github.com/Yashwanth034/CultureBridge-Qloo-Agent
 
 ## Functional public demo
 
@@ -76,7 +76,7 @@ Support three or more audience groups, explicit venue and licensing constraints,
 - [ ] Request event key from official Qloo hackathon form; put it in server secret manager, never in repository
 - [ ] Verify real Qloo requests (search and insights) end-to-end, correct API status and response structure
 - [ ] Public website runs correctly for an anonymous judge (no password, no localhost)
-- [ ] Repository is public and has README, all source, and MIT LICENSE visible in repository About
+- [x] Repository is public and has README, all source, and MIT LICENSE committed. Check that GitHub detects the license in the repository About area.
 - [ ] Test responsive UI, bad inputs, and the three output categories on published site
 - [ ] Check public demo/source URLs in an incognito session
 - [ ] Complete all fields and final submission on Devpost before 30 October 2026 11:45 PM EDT

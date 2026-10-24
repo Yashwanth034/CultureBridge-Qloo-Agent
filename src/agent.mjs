@@ -17,7 +17,8 @@ export function parseSeeds(text) {
   });
 }
 const relativeRank = (rank,total) => rank < 0 ? 0 : Math.round((1-rank/Math.max(total,1))*100);
-export function reconcile(a,b,joint,max=6) {
+export function reconcile(a,b,joint,max=6,strategy='balanced') {
+  if (!['balanced','discovery'].includes(strategy)) throw new QlooError('Unknown mediation strategy.',400);
   const mapA = new Map(a.map((item,i)=>[item.id,{item,rank:i}]));
   const mapB = new Map(b.map((item,i)=>[item.id,{item,rank:i}]));
   const mapJ = new Map(joint.map((item,i)=>[item.id,{item,rank:i}]));
@@ -32,13 +33,16 @@ export function reconcile(a,b,joint,max=6) {
       commonGround:both,jointDiscovery:Boolean(bridge),
       parityGap:Math.abs(pa-pb),
       score:both?Math.round(.7*Math.min(pa,pb)+.3*(pa+pb)/2):0,
+      jointRankScore:bridge?relativeRank(bridge.rank,joint.length):0,
+      candidateStrategy:strategy,
       discoveryRank:bridge?bridge.rank+1:null,
       groupARank:left?left.rank+1:null,groupBRank:right?right.rank+1:null,
       evidence:both?'Qloo independently ranked this for both groups: #'+(left.rank+1)+' and #'+(right.rank+1)+'.':'Exploratory only: it was not independently retrieved for both groups.'
     };
   });
+  const priority=(x)=>strategy==='discovery' ? 0.55*x.score+0.45*x.jointRankScore : x.score;
   const agreement=rows.filter((x)=>x.commonGround)
-    .sort((x,y)=>y.score-x.score || x.parityGap-y.parityGap || x.name.localeCompare(y.name));
+    .sort((x,y)=>priority(y)-priority(x) || x.parityGap-y.parityGap || x.name.localeCompare(y.name));
   const exploratory=rows.filter((x)=>!x.commonGround&&x.jointDiscovery)
     .sort((x,y)=>x.discoveryRank-y.discoveryRank);
   return {agreement:agreement.slice(0,max),exploratory:exploratory.slice(0,max),overlapCount:agreement.length};
@@ -58,28 +62,49 @@ export async function buildBridge(input,client) {
   const sa=parseSeeds(input.groupA),sb=parseSeeds(input.groupB);
   const category=String(input.category||'movie');
   if (!TYPES.has(category)) throw new QlooError('Choose movie, artist, or book.',400);
+  const strategy=String(input.strategy||'balanced');
+  if (!['balanced','discovery'].includes(strategy)) throw new QlooError('Choose a valid mediation strategy.',400);
   const trace=['Validated two audience profiles'];
   const a=await resolve(sa,client),b=await resolve(sb,client);
   if (!a.resolved.length||!b.resolved.length) throw new QlooError('Qloo could not resolve enough tastes. Try well-known titles with movie: or artist: prefixes.',422);
   trace.push('Resolved actual Qloo cultural entities');
   const idsA=[...new Set(a.resolved.map((x)=>x.id))],idsB=[...new Set(b.resolved.map((x)=>x.id))];
-  const listA=await client.insights(category,idsA),listB=await client.insights(category,idsB);
+  let listA=await client.insights(category,idsA),listB=await client.insights(category,idsB);
   trace.push('Scouted each group independently');
   const joint=await client.insights(category,[...new Set([...idsA,...idsB])]);
   trace.push('Probed a combined Qloo taste signal');
-  const compared=reconcile(listA,listB,joint);
+  let compared=reconcile(listA,listB,joint,6,strategy);
+  let expanded=false;
+  // Autonomous recovery: widen a narrow first pass only if the first pass was
+  // already full and no mutually supported candidate was found.
+  if(!compared.overlapCount && listA.length>=40 && listB.length>=40) {
+    trace.push('No common ground in first pass: expanded Qloo search to 50 per group');
+    listA=await client.insights(category,idsA,50);
+    listB=await client.insights(category,idsB,50);
+    compared=reconcile(listA,listB,joint,6,strategy);
+    expanded=true;
+  }
   trace.push('Audited rank balance and common-ground evidence');
+  const topA=listA[0],topB=listB[0];
+  const comparison={
+    unmediatedA:topA?{name:topA.name,acknowledgedByOther:listB.some((x)=>x.id===topA.id)}:null,
+    unmediatedB:topB?{name:topB.name,acknowledgedByOther:listA.some((x)=>x.id===topB.id)}:null,
+    overlapCount:compared.overlapCount,
+    strategy
+  };
   const overlap=compared.overlapCount>0;
   return {
     state:overlap?'grounded-overlap':'exploration-only',mode:'qloo-live',
-    category,groupA:{seeds:a.resolved,unmatched:a.unmatched,count:listA.length},
-    groupB:{seeds:b.resolved,unmatched:b.unmatched,count:listB.length},
+    category,strategy,comparison,
+    groupA:{seeds:a.resolved,unmatched:a.unmatched,approximate:a.resolved.filter((x)=>!x.exact),count:listA.length},
+    groupB:{seeds:b.resolved,unmatched:b.unmatched,approximate:b.resolved.filter((x)=>!x.exact),count:listB.length},
     candidates:overlap?compared.agreement:[],exploratory:compared.exploratory,
     overlapCount:compared.overlapCount,trace,
     metadata:{
-      requestedCalls:sa.length+sb.length+3,
+      requestedCalls:sa.length+sb.length+3+(expanded?2:0),
+      expandedSearch:expanded,
       explanation:overlap
-        ? 'Each common-ground item appears in both independent Qloo rankings. Balance is calculated from relative positions, not Qloo affinity or estimated probability.'
+        ? 'Each common-ground item appears in both independent Qloo rankings. Balanced mode prioritizes the weaker side; discovery mode adds the joint-signal ranking. Scores use relative positions, not Qloo affinity or estimated probability.'
         : 'No item appeared in both independent top lists. Joint-signal suggestions are exploratory, NOT verified agreement.'
     }
   };
