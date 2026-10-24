@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {verifyQloo} from '../scripts/verify-qloo.mjs';
+import {verifyQloo,verifyAllQloo} from '../scripts/verify-qloo.mjs';
 
 const id=n=>'00000000-0000-4000-8000-'+String(n).padStart(12,'0');
 const item=n=>({id:id(n),name:'Movie '+n,type:'movie'});
@@ -37,4 +37,19 @@ test('verification refuses a Qloo response with no usable independent candidates
     async insights(){return []}
   };
   await assert.rejects(verifyQloo({client}),/did not return independent rankings/);
+});
+test('all-categories verification uses real category-specific taste seeds',async()=>{
+  const searched=[],queries=[];
+  const ids={'Interstellar':1,'Spirited Away':2,'Daft Punk':3,'BTS':4,'Dune':5,'Pride and Prejudice':6};
+  const client={
+    apiKey:'mock-credential',
+    async search(name,type){searched.push([name,type]);return [{id:id(ids[name]),name,type}];},
+    async insights(type,entities){queries.push([type,entities]);return [{id:id(100),name:'Shared',type}];}
+  };
+  const reports=await verifyAllQloo({client});
+  assert.deepEqual(reports.map(x=>x.category),['movie','artist','book']);
+  assert.deepEqual(searched,[['Interstellar','movie'],['Spirited Away','movie'],['Daft Punk','artist'],['BTS','artist'],['Dune','book'],['Pride and Prejudice','book']]);
+  assert.equal(queries.length,9);
+  assert.deepEqual(queries.map(x=>x[0]),['movie','movie','movie','artist','artist','artist','book','book','book']);
+  assert.ok(reports.every(x=>x.verifiedOverlapCount===1));
 });

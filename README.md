@@ -55,12 +55,13 @@ npm test
 After you receive and configure your **private** Qloo event key, check the real external API with:
 
 ```bash
-npm run verify:qloo
+npm run verify:qloo                  # verifies movie, artist, and book
+npm run verify:qloo -- movie         # optional single-category check
 npm run verify:qloo -- artist
 npm run verify:qloo -- book
 ```
 
-Each verification makes actual upstream `/search` and `/v2/insights` requests using a two-person taste brief. It fails if the key is absent, either input cannot be resolved or the two independent insights results are empty. It reports no credential. **This command has not passed against a real key in this environment.**
+Each verification makes actual upstream `/search` and `/v2/insights` requests with category-specific cultural anchors. The default command checks all three categories in sequence and stops on any failed check. It fails if the key is absent, either input cannot be resolved or the two independent insights results are empty. It reports no credential. **This command has not passed against a real key in this environment.**
 
 `npm test` and `npm run check` are equivalent when npm is available. The test suite uses deterministic Qloo-shaped **mocks**, not live API data. Do not represent these as a real integration test.
 

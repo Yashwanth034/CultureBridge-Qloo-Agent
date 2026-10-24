@@ -4,6 +4,7 @@
  * Usage (from local shell with a secret configured):
  *   QLOO_API_KEY=... npm run verify:qloo
  *   npm run verify:qloo -- artist
+ *   npm run verify:qloo -- all
  *
  * NOTE: Do not paste a key into GitHub, browser console, or Devpost.
  * The command reports only the test category, candidate counts and stage.
@@ -13,7 +14,12 @@ import {resolve} from 'node:path';
 import {QlooClient} from '../src/qloo.mjs';
 import {buildBridge} from '../src/agent.mjs';
 
-const categories = new Set(['movie','artist','book']);
+const scenarios = Object.freeze({
+  movie:{groupA:'movie: Interstellar',groupB:'movie: Spirited Away'},
+  artist:{groupA:'artist: Daft Punk',groupB:'artist: BTS'},
+  book:{groupA:'book: Dune',groupB:'book: Pride and Prejudice'}
+});
+const categories=new Set(Object.keys(scenarios));
 export async function verifyQloo({client,category='movie'}={}) {
   if (!categories.has(category)) throw new Error('Choose movie, artist or book.');
   const activeClient=client??new QlooClient();
@@ -22,12 +28,7 @@ export async function verifyQloo({client,category='movie'}={}) {
   }
   // A and B have different input seeds, so the check proves both independent
   // search paths and the subsequent joint Insights request execute.
-  const plan=await buildBridge({
-    groupA:'movie: Interstellar',
-    groupB:'movie: Spirited Away',
-    category,
-    strategy:'balanced'
-  }, activeClient);
+  const plan=await buildBridge({...scenarios[category],category,strategy:'balanced'},activeClient);
   if (plan.mode!=='qloo-live' || !plan.groupA.seeds.length || !plan.groupB.seeds.length) {
     throw new Error('Live Qloo smoke test did not resolve both input profiles.');
   }
@@ -45,9 +46,16 @@ export async function verifyQloo({client,category='movie'}={}) {
     note:'All counts came from live Qloo requests. Shared candidates are not guaranteed.'
   };
 }
+export async function verifyAllQloo({client}={}) {
+  const activeClient=client??new QlooClient();
+  const reports=[];
+  for(const category of categories) reports.push(await verifyQloo({client:activeClient,category}));
+  return reports;
+}
 if (process.argv[1] && resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
   try {
-    const report=await verifyQloo({category:process.argv[2]||'movie'});
+    const selection=process.argv[2]||'all';
+    const report=selection==='all'?await verifyAllQloo():await verifyQloo({category:selection});
     console.log(JSON.stringify({success:true,...report},null,2));
   } catch(error) {
     console.error('Qloo live verification failed:',error.message);
