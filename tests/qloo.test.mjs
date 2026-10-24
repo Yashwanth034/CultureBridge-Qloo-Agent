@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {extractEntities,QlooClient,QLOO_ORIGIN} from '../src/qloo.mjs';
+import {extractEntities,extractContributions,QlooClient,QLOO_ORIGIN} from '../src/qloo.mjs';
 const ID='123e4567-e89b-42d3-a456-426614174000';
 const entity={entity_id:ID,name:'Dune',types:['urn:entity:movie'],query:{affinity:0.66}};
 test('normalizes documented Qloo entity envelopes',()=>{
@@ -8,6 +8,24 @@ test('normalizes documented Qloo entity envelopes',()=>{
   assert.equal(entities.length,1);
   assert.equal(entities[0].type,'movie');
   assert.equal(entities[0].affinity,0.66);
+});
+test('Qloo explainability accepts only validated provider seed IDs and normalized scores',()=>{
+  const other='87654321-ffff-4000-8000-123456789012';
+  assert.deepEqual(extractContributions({
+    'signal.interests.entities':{[ID]:0.42,[other]:1,'spoofed':0.5}
+  }),[{id:ID,score:0.42},{id:other,score:1}]);
+  assert.deepEqual(extractContributions({
+    'signal.interests.entities':[{entity_id:ID,score:0.31},{id:other,contribution:0.62}]
+  }),[{id:ID,score:0.31},{id:other,score:0.62}]);
+  assert.deepEqual(extractContributions({
+    'signal.interests.entities':{[ID]:'0.8',[other]:3}
+  }),[]);
+  assert.deepEqual(extractContributions({warning:'unavailable'}),[]);
+  assert.deepEqual(extractContributions(undefined),[]);
+  const [entityWithContributions]=extractEntities({results:{entities:[{
+    ...entity,query:{affinity:0.6,explainability:{'signal.interests.entities':{[ID]:0.4}}}
+  }]}});
+  assert.deepEqual(entityWithContributions.contributions,[{id:ID,score:0.4}]);
 });
 test('Qloo affinity retains only genuine finite numeric provider values',()=>{
   const make=value=>({entity_id:ID,name:'Dune',type:'urn:entity:movie',query:{affinity:value}});

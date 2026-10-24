@@ -5,6 +5,32 @@ const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 export class QlooError extends Error {
   constructor(message, status = 502) { super(message); this.name = 'QlooError'; this.status = status; }
 }
+const toContributionScore=value=>{
+  if(typeof value!=='number' || !Number.isFinite(value) || value<0 || value>1)return null;
+  return value;
+};
+// Qloo's explainability is optional. Accept only unambiguous ID + normalized
+// numeric score pairs; unknown response variants remain absent, never guessed.
+export function extractContributions(explainability){
+  const block=explainability?.['signal.interests.entities'];
+  if(!block || typeof block!=='object')return [];
+  const rows=[];
+  const add=(id,score)=>{
+    if(typeof id!=='string'||!UUID.test(id))return;
+    const number=toContributionScore(score);
+    if(number===null)return;
+    rows.push({id:id.toLowerCase(),score:number});
+  };
+  if(Array.isArray(block)){
+    for(const item of block){
+      if(!item||typeof item!=='object'||Array.isArray(item))continue;
+      add(item.entity_id||item.id,item.score??item.contribution);
+    }
+  }else{
+    for(const [id,value] of Object.entries(block))add(id,value);
+  }
+  return [...new Map(rows.map(row=>[row.id,row])).values()].slice(0,8);
+}
 export function extractEntities(json) {
   const result = json && json.results;
   const rows = Array.isArray(result) ? result : result && Array.isArray(result.entities) ? result.entities : [];
@@ -22,7 +48,8 @@ export function extractEntities(json) {
     const numeric = typeof raw === 'number' ? raw :
       (typeof raw === 'string' && raw.trim() && /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(raw.trim()) ? Number(raw) : null);
     return {id, name: name.slice(0, 120), type: CATEGORIES.includes(type) ? type : null,
-      affinity: typeof numeric === 'number' && Number.isFinite(numeric) ? numeric : null};
+      affinity: typeof numeric === 'number' && Number.isFinite(numeric) ? numeric : null,
+      contributions:extractContributions(item.query?.explainability)};
   }).filter(Boolean);
 }
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));

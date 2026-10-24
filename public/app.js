@@ -168,6 +168,35 @@ function selectCandidate(index){
     }
     affinityPanel.append(el('p','affinity-disclaimer','Raw affinity values are provided by Qloo. They are not percentages, satisfaction probabilities or directly comparable across independent queries.'));
   }
+  const contributed=[];
+  for(const [group,label,seeds,items] of [
+    ['A','Perspective A',latest.groupA.seeds,x.groupAContributions],
+    ['B','Perspective B',latest.groupB.seeds,x.groupBContributions],
+    ['Joint','Combined tastes',[...latest.groupA.seeds,...latest.groupB.seeds],x.jointContributions]
+  ]){
+    if(!Array.isArray(items))continue;
+    const names=new Map(seeds.map(seed=>[seed.id.toLowerCase(),seed.name]));
+    for(const contribution of items){
+      if(!contribution||!names.has(String(contribution.id).toLowerCase())||
+         typeof contribution.score!=='number'||!Number.isFinite(contribution.score)||
+         contribution.score<0||contribution.score>1)continue;
+      contributed.push({label,name:names.get(contribution.id.toLowerCase()),score:contribution.score});
+    }
+  }
+  const contributionPanel=$('featured-contributions');
+  contributionPanel.hidden=!contributed.length;
+  contributionPanel.replaceChildren();
+  if(contributed.length){
+    contributionPanel.append(el('p','affinity-heading','WHY QLOO SUGGESTED THIS'));
+    for(const contribution of contributed.slice(0,12)){
+      const line=el('div','affinity-entry');
+      line.append(el('span','',contribution.label+' · '+contribution.name),
+        el('strong','',contribution.score.toFixed(3)));
+      contributionPanel.append(line);
+    }
+    contributionPanel.append(el('p','affinity-disclaimer',
+      'Qloo-reported normalized contributions (0–1) from approved interests. Missing influences may be omitted by Qloo; values are not satisfaction probabilities.'));
+  }
   const bars=[];
   for(const [title,value,rank,color] of [
     ['Perspective A',x.groupAScore,x.groupARank,'first'],

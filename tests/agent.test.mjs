@@ -45,6 +45,17 @@ test('candidate includes raw Qloo affinities without overwriting the rank fairne
   assert.equal(second.jointAffinity,null);
   assert.equal(reconcile([item(1)],[item(1)],[]).agreement[0].groupAAffinity,null);
 });
+test('two-sided recommendation keeps actual Qloo seed contributions separate',()=>{
+  const a=[{...item(1),contributions:[{id:id(14),score:0.62}]}];
+  const b=[{...item(1),contributions:[{id:id(15),score:0.28}]}];
+  const j=[{...item(1),contributions:[{id:id(14),score:0.5},{id:id(15),score:0.2}]}];
+  const pick=reconcile(a,b,j).agreement[0];
+  assert.deepEqual(pick.groupAContributions,a[0].contributions);
+  assert.deepEqual(pick.groupBContributions,b[0].contributions);
+  assert.deepEqual(pick.jointContributions,j[0].contributions);
+  assert.equal(pick.score,100);
+  assert.deepEqual(reconcile([item(1)],[item(1)],[]).agreement[0].jointContributions,[]);
+});
 test('discovery mode gives more weight to joint Qloo rank while preserving mutual evidence',()=>{
   const sides=[item(1),item(2),item(3)];
   const joint=[item(2),item(1)];

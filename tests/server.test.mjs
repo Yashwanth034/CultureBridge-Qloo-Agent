@@ -172,6 +172,35 @@ test('HTTP /api/plan preserves truthful independent evidence when optional joint
     assert.doesNotMatch(JSON.stringify(plan),/mock-local-key/);
   }finally{await new Promise(resolve=>server.close(resolve));}
 });
+test('HTTP result explains Qloo-supported recommendations using approved seed contributions',async()=>{
+  const client={
+    apiKey:'stub-private',
+    async search(name,type){return [{id:uid(name==='Dune'?1:2),name,type:'movie'}]},
+    async insights(type,ids){
+      return [{
+        ...entity(99),
+        affinity:0.4,
+        contributions:[{id:ids[0],score:0.65},{id:uid(888),score:0.9}]
+      }];
+    }
+  };
+  const {server,url}=await serve(client);
+  try{
+    const res=await fetch(url+'/api/plan',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({groupA:'movie: Dune',groupB:'movie: Barbie',category:'movie'})});
+    assert.equal(res.status,200);
+    const data=await res.json();
+    const result=data.candidates[0];
+    assert.deepEqual(result.groupAContributions,[{id:uid(1),score:0.65},{id:uid(888),score:0.9}]);
+    assert.deepEqual(result.groupBContributions,[{id:uid(2),score:0.65},{id:uid(888),score:0.9}]);
+    // Only the browser presentation maps returned IDs to user-approved seed
+    // names. Unmatched IDs must never be attributed to a human's interests.
+    assert.deepEqual(data.groupA.seeds.map(seed=>seed.name),['Dune']);
+    assert.deepEqual(data.groupB.seeds.map(seed=>seed.name),['Barbie']);
+    assert.doesNotMatch(JSON.stringify(data),/stub-private/);
+  }finally{await new Promise(resolve=>server.close(resolve));}
+});
 test('HTTP /api/plan keeps raw Qloo affinity evidence distinct from relative fairness',async()=>{
   const client={
     apiKey:'stub-only',
