@@ -19,6 +19,16 @@ function stage(name) {
   $('phase-indicator').textContent=({ 'empty-state':'NOT STARTED','loading-state':'WORKING','match-review':'REVIEW THE MATCHES','results':'SHORTLIST READY','error-state':'NEEDS ATTENTION'})[name];
   $('results').setAttribute('aria-busy','false');
   document.dispatchEvent(new CustomEvent('culturebridge:phase',{detail:{phase:name}}));
+  // The active workspace sits beneath the three taste cards on mobile and
+  // many laptop screens. Without scrolling, a successful click can look inert.
+  if(name!=='empty-state') {
+    requestAnimationFrame(()=>{
+      const active=$(name);
+      if(!active.hidden) active.scrollIntoView({
+        block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'
+      });
+    });
+  }
 }
 function updateDraft(){return {groupA:$('group-a').value,groupB:$('group-b').value,category:$('category').value,strategy:$('strategy').value};}
 async function post(path,payload){
@@ -26,6 +36,14 @@ async function post(path,payload){
   let data;
   try{data=await response.json();}catch{throw new Error('The server returned an unreadable response.');}
   if(!response.ok)throw new Error(data.error||'Unable to complete the request.');
+  if(data.source==='qloo-live'||data.mode==='qloo-live'){
+    // Unlike /api/health, this reflects a completed request that reached
+    // Qloo through the server. Do not mark unconfigured apps as connected.
+    $('api-banner').dataset.liveVerified='true';
+    $('api-banner').classList.remove('needs-key');
+    $('api-banner').classList.add('connected');
+    $('api-message').textContent=data.mode==='qloo-live'?'Qloo live recommendations received':'Qloo live search connected';
+  }
   return data;
 }
 function setLoading(title,detail){
@@ -133,7 +151,10 @@ function resultRow(x,index){
   const number=el('span','rank-no',String(index+1).padStart(2,'0'));
   const nameWrap=el('span');
   nameWrap.append(el('span','rank-name',x.name),el('span','rank-sub','Group A #'+x.groupARank+'  ·  Group B #'+x.groupBRank));
-  button.append(number,nameWrap,el('span','rank-number',x.score),el('span','rank-arr','↗'));
+  const fairness=el('span','rank-index');
+  fairness.append(el('span','rank-number',x.score),el('span','score-label','BALANCE'));
+  button.setAttribute('aria-label','Inspect '+x.name+'; relative-rank fairness index '+x.score+', not a probability');
+  button.append(number,nameWrap,fairness,el('span','rank-arr','↗'));
   button.addEventListener('click',()=>selectCandidate(index));
   return button;
 }
@@ -219,6 +240,7 @@ for(const id of ['group-a','group-b','category','strategy']){
 }
 fetch('/api/health').then(r=>r.json()).then(data=>{
   const badge=$('api-banner');
+  if(badge.dataset.liveVerified==='true')return;
   badge.classList.add(data.qlooConfigured?'connected':'needs-key');
   $('api-message').textContent=data.qlooConfigured?'Qloo key present · live access not yet verified':'Qloo key not configured';
 }).catch(()=>{$('api-message').textContent='Qloo connection status unavailable';});

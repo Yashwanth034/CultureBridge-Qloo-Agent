@@ -39,6 +39,10 @@ test('app loads local behavior with no inline script or unsafe HTML',async()=>{
   assert.match(js,/\/api\/resolve/);
   assert.match(js,/\/api\/plan/);
   assert.match(js,/aria-pressed/);
+  assert.match(js,/scrollIntoView/);
+  assert.match(js,/relative-rank fairness index/);
+  assert.match(js,/dataset\.liveVerified/);
+  assert.match(js,/Qloo live recommendations received/);
   assert.match(js,/culturebridge:phase/);
   assert.match(js,/culturebridge:selection/);
   const scene=await source('public/scene.js');
