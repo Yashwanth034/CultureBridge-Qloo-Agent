@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {verifyDeployment,verifyHostedFlow} from '../scripts/verify-deployment.mjs';
+import {createAppServer} from '../src/server.mjs';
 
 function fakeSite({configured=true,broken=null}={}){
   const entries={
@@ -65,6 +66,36 @@ test('live preflight rejects unresolved entities, invalid Insights and upstream 
   await assert.rejects(verifyHostedFlow(new URL('https://app.example/'),{fetchImpl:wrongInsights}),/valid independent live Qloo Insights/);
   const outage=async()=>Response.json({error:'Qloo unavailable'},{status:503});
   await assert.rejects(verifyHostedFlow(new URL('https://app.example/'),{fetchImpl:outage}),/HTTP 503/);
+});
+test('real HTTP server integration exercises hosted review and Insights with a stubbed Qloo client',async()=>{
+  const searchEvents=[],insightEvents=[];
+  const entityId=(n)=>'00000000-0000-4000-8000-'+String(n).padStart(12,'0');
+  const searchNames=new Map();
+  const mockClient={
+    apiKey:'local-only-test',
+    async search(name,type){
+      searchEvents.push({name,type});
+      if(!searchNames.has(name))searchNames.set(name,searchNames.size+1);
+      return [{id:entityId(searchNames.get(name)),name,type:type||'movie'}];
+    },
+    async insights(category,ids){
+      insightEvents.push({category,ids});
+      return [{id:entityId(900),name:'Shared test match',type:category}];
+    }
+  };
+  const server=createAppServer({client:mockClient});
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  try{
+    const url='http://127.0.0.1:'+server.address().port+'/';
+    const report=await verifyDeployment(url,{live:true});
+    assert.equal(report.checksPassed.length,6);
+    assert.deepEqual(report.liveQlooChecks.map(x=>x.category),['movie','artist','book']);
+    assert.ok(report.liveQlooChecks.every(x=>x.sharedCandidates===1));
+    assert.equal(searchEvents.length,12); // resolve and plan each look up both seeds
+    assert.equal(insightEvents.length,9); // independent A, independent B, combined per category
+  } finally{
+    await new Promise(resolve=>server.close(resolve));
+  }
 });
 test('deployment preflight prevents HTTP public links, missing keys and broken assets',async()=>{
   await assert.rejects(verifyDeployment('http://public.example/',{fetchImpl:fakeSite()}),/HTTPS/);
