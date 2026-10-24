@@ -41,7 +41,7 @@ test('optional public live Qloo check verifies reviewed IDs and all three catego
     if(path==='/api/plan'){
       assert.equal(data.selections.groupA[0],'123e4567-e89b-42d3-a456-426614174000');
       assert.equal(data.selections.groupB[0],'123e4567-e89b-42d3-a456-426614174000');
-      return Response.json({mode:'qloo-live',category:data.category,state:'exploration-only',overlapCount:0,candidates:[],exploratory:[],groupA:{count:2},groupB:{count:3}});
+      return Response.json({mode:'qloo-live',category:data.category,state:'exploration-only',overlapCount:0,candidates:[],exploratory:[],groupA:{count:2},groupB:{count:3},metadata:{jointStatus:'ok'}});
     }
     throw new Error('Unexpected route');
   };
@@ -66,6 +66,14 @@ test('live preflight rejects unresolved entities, invalid Insights and upstream 
   await assert.rejects(verifyHostedFlow(new URL('https://app.example/'),{fetchImpl:wrongInsights}),/valid independent live Qloo Insights/);
   const outage=async()=>Response.json({error:'Qloo unavailable'},{status:503});
   await assert.rejects(verifyHostedFlow(new URL('https://app.example/'),{fetchImpl:outage}),/HTTP 503/);
+});
+test('live deployment checker refuses degraded joint Insights even when ranks are present',async()=>{
+  const row={matches:[{id:'123e4567-e89b-42d3-a456-426614174000'}],suggestedId:'123e4567-e89b-42d3-a456-426614174000'};
+  const fetchImpl=async url=>new URL(url).pathname==='/api/resolve'
+    ?Response.json({source:'qloo-live',groupA:[row],groupB:[row]})
+    :Response.json({mode:'qloo-live',category:'movie',state:'grounded-overlap',overlapCount:1,
+      candidates:[{id:'mock'}],exploratory:[],groupA:{count:1},groupB:{count:1},metadata:{jointStatus:'unavailable'}});
+  await assert.rejects(verifyHostedFlow(new URL('https://app.example/'),{fetchImpl}),/valid independent live Qloo Insights/);
 });
 test('real HTTP server integration exercises hosted review and Insights with a stubbed Qloo client',async()=>{
   const searchEvents=[],insightEvents=[];

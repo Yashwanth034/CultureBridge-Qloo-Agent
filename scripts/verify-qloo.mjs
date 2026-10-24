@@ -35,6 +35,9 @@ export async function verifyQloo({client,category='movie'}={}) {
   if (plan.groupA.count===0 || plan.groupB.count===0) {
     throw new Error('Live Qloo Insights did not return independent rankings for both profiles.');
   }
+  if(plan.metadata?.jointStatus!=='ok'){
+    throw new Error('Live Qloo joint exploration failed; verify full Insights availability before submitting.');
+  }
   return {
     category,
     state:plan.state,

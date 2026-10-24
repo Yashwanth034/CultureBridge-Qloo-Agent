@@ -25,8 +25,9 @@ All four are equally weighted. The judges decide. There is no defensible externa
 
 ## Present local verification
 
-- 31 automated tests passed on Node 20 on October 25, 2026, including duplicate Qloo-ID rank stability and a full local HTTP server check of resolve → reviewed identity IDs → three Qloo-shaped Insights calls per category (stubbed upstream). The external real-key API test remains pending.
-- Chrome browser QA confirmed the no-overlap state renders a prominently labeled exploratory candidate, does not mislabel it verified agreement, and allows switching output category. The temporary Qloo-shaped mock browser server was stopped afterward., including HTTP server security headers, basic UI file delivery, response contract, mocked Qloo calls, caching, missing credentials, bad IDs, the 404 no-result search case, two strategies, no-overlap honesty, and genuine two-list agreement sorting.
+- 37 automated tests passed on Node 20 on October 25, 2026. Coverage includes duplicate-ID rank stability, HTTP-level end-to-end flows for all three categories, optional joint-Insights outage recovery, and strict real-Qloo preflight rejection of degraded runs. The external real-key API test remains pending.
+- Chrome browser QA confirmed the no-overlap state renders a prominently labeled exploratory candidate, does not mislabel it verified agreement, and allows switching output category. The temporary Qloo-shaped mock browser server was stopped afterward.
+- API tests cover HTTP security headers, static delivery, request/response contracts, Qloo-shaped mocks, caching, missing credentials, invalid IDs, 404 no-result searches, both mediation strategies, no-overlap honesty, ranking and degradation transparency.
 - JS syntax validation: passed.
 - Browser: the new immersive web interface, live Three.js render, Qloo identity-review stage, and results were inspected in Chrome. An independent **mock-only** local server supplied test entities and rankings during interaction checks. This does not verify real Qloo. The real server correctly reports that no event key is configured.
 - Public GitHub code repository has been created.

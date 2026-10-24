@@ -103,8 +103,18 @@ export async function buildBridge(input,client) {
   const idsA=[...new Set(a.resolved.map((x)=>x.id))],idsB=[...new Set(b.resolved.map((x)=>x.id))];
   let listA=await client.insights(category,idsA),listB=await client.insights(category,idsB);
   trace.push('Scouted each group independently');
-  const joint=await client.insights(category,[...new Set([...idsA,...idsB])]);
-  trace.push('Probed a combined Qloo taste signal');
+  // The third (joint) probe is additive evidence, not a prerequisite for
+  // independently verified two-sided common ground. If Qloo is transiently
+  // unavailable, preserve that independent evidence and disclose degradation.
+  let joint=[],jointStatus='ok';
+  try {
+    joint=await client.insights(category,[...new Set([...idsA,...idsB])]);
+    trace.push('Probed a combined Qloo taste signal');
+  } catch(error) {
+    if (!(error instanceof QlooError) || ![502,503,504].includes(error.status)) throw error;
+    jointStatus='unavailable';
+    trace.push('Joint Qloo exploration was temporarily unavailable; continued with two independent Qloo rankings only');
+  }
   let compared=reconcile(listA,listB,joint,6,strategy);
   let expanded=false;
   // Autonomous recovery: widen a narrow first pass only if the first pass was
@@ -133,11 +143,13 @@ export async function buildBridge(input,client) {
     candidates:overlap?compared.agreement:[],exploratory:compared.exploratory,
     overlapCount:compared.overlapCount,trace,
     metadata:{
+      jointStatus,
+      warnings:jointStatus==='unavailable'?['The joint Qloo exploration request failed. Independently verified matches remain available; joint-only discoveries and discovery-mode boosting are unavailable.']:[],
       requestedCalls:sa.length+sb.length+3+(expanded?2:0),
       expandedSearch:expanded,
       explanation:overlap
-        ? 'Each common-ground item appears in both independent Qloo rankings. Balanced mode prioritizes the weaker side; discovery mode adds the joint-signal ranking. Scores use relative positions, not Qloo affinity or estimated probability.'
-        : 'No item appeared in both independent top lists. Joint-signal suggestions are exploratory, NOT verified agreement.'
+        ? 'Each common-ground item appears in both independent Qloo rankings. Balanced mode prioritizes the weaker side; discovery mode adds the joint-signal ranking when available. Scores use relative positions, not Qloo affinity or estimated probability.'+(jointStatus==='unavailable'?' The joint signal was unavailable; discovery mode used independent evidence only.':'')
+        : jointStatus==='unavailable'?'No item appeared in both independent top lists. The joint signal could not be checked, so no exploratory discovery is shown.':'No item appeared in both independent top lists. Joint-signal suggestions are exploratory, NOT verified agreement.'
     }
   };
 }

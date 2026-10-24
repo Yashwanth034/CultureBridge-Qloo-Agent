@@ -59,6 +59,48 @@ test('agent resolves identities and makes independent and joint probes',async()=
   assert.equal(plan.groupA.seeds[0].name,'Arrival');
   assert.equal(plan.trace.length,5);
 });
+test('preserves independently verified common ground if joint Insights is temporarily unavailable',async()=>{
+  const client={
+    async search(name){return [{id:id(name==='Arrival'?1:2),name,type:'movie'}];},
+    async insights(category,ids){
+      if(ids.length===2)throw new (await import('../src/qloo.mjs')).QlooError('temporary Qloo outage',503);
+      return [item(10),item(11)];
+    }
+  };
+  const plan=await buildBridge({groupA:'movie: Arrival',groupB:'movie: Amelie',category:'movie',strategy:'discovery'},client);
+  assert.equal(plan.state,'grounded-overlap');
+  assert.equal(plan.metadata.jointStatus,'unavailable');
+  assert.equal(plan.candidates.length,2);
+  assert.equal(plan.exploratory.length,0);
+  assert.match(plan.metadata.warnings.join(' '),/joint Qloo exploration/i);
+  assert.match(plan.metadata.explanation,/discovery mode used independent evidence only/);
+  assert.ok(plan.trace.some(t=>t.includes('unavailable')));
+});
+test('does not invent joint-only discoveries when the joint Qloo probe fails',async()=>{
+  const client={
+    async search(name){return [{id:id(name==='Arrival'?1:2),name,type:'movie'}];},
+    async insights(category,ids){
+      if(ids.length===2)throw new (await import('../src/qloo.mjs')).QlooError('temporarily unavailable',503);
+      return ids[0]===id(1)?[item(10)]:[item(20)];
+    }
+  };
+  const plan=await buildBridge({groupA:'Arrival',groupB:'Amelie',category:'movie'},client);
+  assert.equal(plan.state,'exploration-only');
+  assert.deepEqual(plan.candidates,[]);
+  assert.deepEqual(plan.exploratory,[]);
+  assert.equal(plan.metadata.jointStatus,'unavailable');
+  assert.match(plan.metadata.explanation,/could not be checked/);
+});
+test('fails rather than masking programming errors or invalid joint requests',async()=>{
+  const client={
+    async search(name){return [{id:id(name==='Arrival'?1:2),name,type:'movie'}];},
+    async insights(category,ids){
+      if(ids.length===2)throw new Error('Programming error: malformed data');
+      return [item(10)];
+    }
+  };
+  await assert.rejects(buildBridge({groupA:'Arrival',groupB:'Amelie'},client),/Programming error/);
+});
 test('agent autonomously expands full ranked lists when initial searches have no overlap',async()=>{
   const calls=[];
   const client={

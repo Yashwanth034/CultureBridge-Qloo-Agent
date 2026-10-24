@@ -61,6 +61,7 @@ export async function verifyHostedFlow(base,{fetchImpl=fetch,categories=liveScen
     if(plan.mode!=='qloo-live'||plan.category!==scenario.category||
        !Array.isArray(plan.candidates)||!Array.isArray(plan.exploratory)||
        !plan.groupA?.count||!plan.groupB?.count||
+       plan.metadata?.jointStatus!=='ok'||
        !['grounded-overlap','exploration-only'].includes(plan.state)){
       throw new Error(scenario.category+' did not return valid independent live Qloo Insights.');
     }

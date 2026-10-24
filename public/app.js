@@ -198,7 +198,7 @@ function renderPlan(plan){
     item.append(el('strong','',x.name),el('span','','Joint search rank #'+x.discoveryRank));
     return item;
   }));
-  const notes=[];
+  const notes=[...(plan.metadata?.warnings||[])];
   for(const group of [plan.groupA,plan.groupB]){
     if(group.unmatched?.length)notes.push('Not matched: '+group.unmatched.join(', '));
     if(group.approximate?.length)notes.push('Approximate Qloo titles: '+group.approximate.map(x=>x.input+' → '+x.name).join('; '));

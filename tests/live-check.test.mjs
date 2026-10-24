@@ -38,6 +38,18 @@ test('verification refuses a Qloo response with no usable independent candidates
   };
   await assert.rejects(verifyQloo({client}),/did not return independent rankings/);
 });
+test('live smoke test rejects partial joint Qloo degradation even when independent lists work',async()=>{
+  const {QlooError}=await import('../src/qloo.mjs');
+  const client={
+    apiKey:'mock-key',
+    async search(name){return [{id:id(name==='Interstellar'?1:2),name,type:'movie'}];},
+    async insights(category,ids){
+      if(ids.length===2)throw new QlooError('temporary outage',503);
+      return [item(10)];
+    }
+  };
+  await assert.rejects(verifyQloo({client}),/joint exploration failed/);
+});
 test('all-categories verification uses real category-specific taste seeds',async()=>{
   const searched=[],queries=[];
   const ids={'Interstellar':1,'Spirited Away':2,'Daft Punk':3,'BTS':4,'Dune':5,'Pride and Prejudice':6};

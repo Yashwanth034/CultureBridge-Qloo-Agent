@@ -56,6 +56,31 @@ test('HTTP /api/resolve returns selectable Qloo entities without starting insigh
    assert.equal(log.length,2);
  } finally {await new Promise(resolve=>server.close(resolve));}
 });
+test('HTTP /api/plan preserves truthful independent evidence when optional joint Qloo fails',async()=>{
+  const {QlooError}=await import('../src/qloo.mjs');
+  const client={
+    apiKey:'mock-local-key',
+    async search(name,type){return [{id:uid(name==='Dune'?1:2),name,type:'movie'}];},
+    async insights(type,ids){
+      if(ids.length===2)throw new QlooError('temporary provider outage',503);
+      return [entity(6),entity(7)];
+    }
+  };
+  const {server,url}=await serve(client);
+  try{
+    const res=await fetch(url+'/api/plan',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({groupA:'movie: Dune',groupB:'movie: Barbie',category:'movie',strategy:'discovery'})});
+    assert.equal(res.status,200);
+    const plan=await res.json();
+    assert.equal(plan.state,'grounded-overlap');
+    assert.equal(plan.candidates.length,2);
+    assert.deepEqual(plan.exploratory,[]);
+    assert.equal(plan.metadata.jointStatus,'unavailable');
+    assert.match(plan.metadata.warnings.join(' '),/joint Qloo exploration/i);
+    assert.doesNotMatch(JSON.stringify(plan),/mock-local-key/);
+  }finally{await new Promise(resolve=>server.close(resolve));}
+});
 test('HTTP /api/plan returns grounded Qloo-shaped output without secrets',async()=>{
   const client={
     apiKey:'dummy-event-key',
