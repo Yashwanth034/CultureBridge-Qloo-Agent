@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {once} from 'node:events';
-import {createAppServer,bodyJson} from '../src/server.mjs';
+import {createAppServer,bodyJson,clientRateKey} from '../src/server.mjs';
 import {QlooClient} from '../src/qloo.mjs';
 
 const uid=(n)=>'00000000-0000-4000-8000-'+String(n).padStart(12,'0');
@@ -12,6 +12,37 @@ async function serve(client) {
   await once(server,'listening');
   return {server,url:'http://127.0.0.1:'+server.address().port};
 }
+test('Render trusted proxy rate keys ignore spoofed leftmost XFF but never trust headers locally',()=>{
+  const req={socket:{remoteAddress:'10.0.0.5'},headers:{
+    'x-forwarded-for':'1.2.3.4, 203.0.113.45, 198.51.100.30, 192.0.2.20'
+  }};
+  assert.equal(clientRateKey(req,0),'10.0.0.5');
+  assert.equal(clientRateKey(req,3),'203.0.113.45');
+  assert.equal(clientRateKey(req,1),'192.0.2.20');
+  assert.equal(clientRateKey({...req,headers:{...req.headers,'cf-connecting-ip':'203.0.113.88'}},3),'203.0.113.88');
+  assert.equal(clientRateKey({...req,headers:{'x-forwarded-for':'1.2.3.4','cf-connecting-ip':'FAKE'}},3),'10.0.0.5');
+  assert.equal(clientRateKey({...req,headers:{'x-forwarded-for':'1.2.3.4, garbage, 192.0.2.20, 203.0.113.9'}},3),'10.0.0.5');
+  assert.equal(clientRateKey({...req,headers:{'cf-connecting-ip':'203.0.113.88'}},0),'10.0.0.5');
+});
+test('trusted proxy limiter separates real visitors and ignores spoofed leftmost addresses',async()=>{
+  const trusted=createAppServer({client:new QlooClient({apiKey:''}),trustedProxyHops:3});
+  await new Promise(resolve=>trusted.listen(0,'127.0.0.1',resolve));
+  const endpoint='http://127.0.0.1:'+trusted.address().port+'/api/resolve';
+  const send=clientIp=>fetch(endpoint,{
+    method:'POST',
+    headers:{'Content-Type':'application/json',
+      'x-forwarded-for':'192.0.2.200, '+clientIp+', 198.51.100.50, 198.51.100.60'},
+    body:'{}'
+  });
+  try{
+    for(let i=0;i<60;i++){
+      const response=await send('203.0.113.81');
+      assert.equal(response.status,400);
+    }
+    assert.equal((await send('203.0.113.81')).status,429);
+    assert.equal((await send('203.0.113.82')).status,400);
+  }finally{await new Promise(resolve=>trusted.close(resolve));}
+});
 test('JSON parser preserves international names across split UTF-8 byte boundaries',async()=>{
   const body={groupA:'movie: Amélie, book: 百年孤独',groupB:'movie: 千と千尋の神隠し, artist: Sigur Rós'};
   const bytes=Buffer.from(JSON.stringify(body),'utf8');

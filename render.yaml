@@ -9,5 +9,10 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      # Render's edge is Cloudflare + Render load-balancing; client IP must be
+      # extracted from the last trusted proxy hops, never from the leftmost
+      # arbitrary X-Forwarded-For value. Direct local servers default to 0.
+      - key: TRUST_PROXY_HOPS
+        value: "3"
       - key: QLOO_API_KEY
         sync: false

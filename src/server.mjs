@@ -1,5 +1,6 @@
 import {createServer} from 'node:http';
 import {StringDecoder} from 'node:string_decoder';
+import {isIP} from 'node:net';
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
@@ -16,6 +17,23 @@ const staticFiles=new Map([
 ]);
 const send=(res,status,obj)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Frame-Options':'DENY'});res.end(JSON.stringify(obj));};
 const counts=new Map();
+export function clientRateKey(req,trustedProxyHops=0){
+  const direct=req.socket?.remoteAddress||'unknown';
+  // Trust proxy headers ONLY when the hosting configuration explicitly says
+  // we are behind the dedicated Render/Cloudflare edge. In direct/local mode,
+  // user-supplied headers must not let clients evade rate limits.
+  if(!Number.isInteger(trustedProxyHops)||trustedProxyHops<1||trustedProxyHops>5)return direct;
+  const edge=req.headers['cf-connecting-ip'];
+  if(typeof edge==='string'&&isIP(edge.trim()))return edge.trim();
+  // Use the rightmost trusted hop count, not the leftmost XFF element that
+  // can be supplied/spoofed by the visitor.
+  const forwarded=req.headers['x-forwarded-for'];
+  if(typeof forwarded!=='string')return direct;
+  const chain=forwarded.split(',').map(x=>x.trim());
+  if(chain.length<trustedProxyHops)return direct;
+  const candidate=chain[chain.length-trustedProxyHops];
+  return isIP(candidate)?candidate:direct;
+}
 function allow(ip) {
   const now=Date.now();
   if (counts.size>2500) for (const [key,item] of counts) if (item.reset<now) counts.delete(key);
@@ -38,7 +56,7 @@ export async function bodyJson(req) {
   data+=decoder.end();
   try {return JSON.parse(data);}catch{throw new QlooError('Request must contain valid JSON.',400);}
 }
-export function createAppServer({client=new QlooClient()}={}) {
+export function createAppServer({client=new QlooClient(),trustedProxyHops=Number(process.env.TRUST_PROXY_HOPS||0)}={}) {
   return createServer(async(req,res)=>{
     try {
       const url=new URL(req.url||'/', 'http://localhost');
@@ -62,7 +80,7 @@ export function createAppServer({client=new QlooClient()}={}) {
           if (host!==req.headers.host) return send(res,403,{error:'Cross-origin requests are not allowed.'});
         }
         if (!String(req.headers['content-type']||'').startsWith('application/json')) return send(res,415,{error:'Send application/json.'});
-        if (!allow(req.socket.remoteAddress||'unknown')) return send(res,429,{error:'Too many plan requests. Please try again later.'});
+        if (!allow(clientRateKey(req,trustedProxyHops))) return send(res,429,{error:'Too many plan requests. Please try again later.'});
         const payload=await bodyJson(req);
         if (!payload||typeof payload!=='object'||Array.isArray(payload)) throw new QlooError('Expected an input object.',400);
         const result=pathname==='/api/resolve'?await previewBridge(payload,client):await buildBridge(payload,client);
