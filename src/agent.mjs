@@ -74,11 +74,14 @@ export async function previewBridge(input, client) {
   return {groupA:await lookup(seedsA),groupB:await lookup(seedsB),source:'qloo-live'};
 }
 async function resolve(seeds,client,chosenIds=[]) {
-  const resolved=[],unmatched=[];
+  const resolved=[],unmatched=[],excluded=[];
   for (let i=0;i<seeds.length;i++) {
     const seed=seeds[i];
-    const candidates=(await client.search(seed.name,seed.type)).filter((x)=>x.type && TYPES.has(x.type));
     const selected=chosenIds[i];
+    // A null in a reviewed selection means the user explicitly rejected this
+    // taste (or no match was presented). Never silently choose a new entity.
+    if (selected===null) {excluded.push(seed.name);continue;}
+    const candidates=(await client.search(seed.name,seed.type)).filter((x)=>x.type && TYPES.has(x.type));
     if (selected!==undefined && selected!==null && (typeof selected!=='string'|| !candidates.some((x)=>x.id===selected))) {
       throw new QlooError('One of the selected Qloo entities is no longer valid. Review the names again.',422);
     }
@@ -87,7 +90,7 @@ async function resolve(seeds,client,chosenIds=[]) {
     if (!chosen) {unmatched.push(seed.name);continue;}
     resolved.push({input:seed.name,name:chosen.name,id:chosen.id,type:chosen.type,exact:chosen.name.toLowerCase()===seed.name.toLowerCase()});
   }
-  return {resolved,unmatched};
+  return {resolved,unmatched,excluded};
 }
 export async function buildBridge(input,client) {
   const sa=parseSeeds(input.groupA),sb=parseSeeds(input.groupB);
@@ -143,8 +146,8 @@ export async function buildBridge(input,client) {
   return {
     state:overlap?'grounded-overlap':'exploration-only',mode:'qloo-live',
     category,strategy,comparison,
-    groupA:{seeds:a.resolved,unmatched:a.unmatched,approximate:a.resolved.filter((x)=>!x.exact),count:listA.length},
-    groupB:{seeds:b.resolved,unmatched:b.unmatched,approximate:b.resolved.filter((x)=>!x.exact),count:listB.length},
+    groupA:{seeds:a.resolved,unmatched:a.unmatched,excluded:a.excluded,approximate:a.resolved.filter((x)=>!x.exact),count:listA.length},
+    groupB:{seeds:b.resolved,unmatched:b.unmatched,excluded:b.excluded,approximate:b.resolved.filter((x)=>!x.exact),count:listB.length},
     candidates:overlap?compared.agreement:[],exploratory:compared.exploratory,
     overlapCount:compared.overlapCount,trace,
     metadata:{

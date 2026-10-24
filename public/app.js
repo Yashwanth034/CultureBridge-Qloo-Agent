@@ -72,6 +72,9 @@ function reviewGroup(target,rows,label,group){
       control.disabled=true;
       field.append(control,el('p','review-note','Try editing this name if it is important to your plan.'));
     }else{
+      const skip=el('option','','Exclude this taste');
+      skip.value='';
+      control.append(skip);
       for(const match of seed.matches){
         const suffix=match.type?' · '+match.type:'';
         const option=el('option','',match.name+suffix+(match.exact?' · exact':''));
@@ -91,19 +94,22 @@ function renderPreview(data){
   preview=data;
   reviewGroup('review-a',data.groupA,'GROUP A / FIRST PERSPECTIVE','groupA');
   reviewGroup('review-b',data.groupB,'GROUP B / SECOND PERSPECTIVE','groupB');
-  const countA=data.groupA.filter(x=>x.matches.length).length;
-  const countB=data.groupB.filter(x=>x.matches.length).length;
-  const issue=$( 'review-warning');
-  issue.hidden=Boolean(countA&&countB);
-  issue.textContent=countA&&countB?'':'Each side must have at least one matched Qloo entity. Edit your preferences and check again.';
-  $('generate').disabled=!(countA&&countB);
   stage('match-review');
+  updateReviewEligibility();
+}
+function updateReviewEligibility(){
+  if(!preview)return;
+  const selectedCount=group=>collectSelections(group).filter(Boolean).length;
+  const good=selectedCount('groupA')>0&&selectedCount('groupB')>0;
+  $('review-warning').hidden=good;
+  $('review-warning').textContent=good?'':'Select at least one confirmed Qloo entity for each perspective, or edit your tastes and check again.';
+  $('generate').disabled=!good;
 }
 function collectSelections(group){
   const rows=preview[group];
   return rows.map((_,i)=>{
     const select=document.querySelector('.choice-select[data-group="'+group+'"][data-index="'+i+'"]');
-    return select&&!select.disabled?select.value:null;
+    return select&&!select.disabled?(select.value||null):null;
   });
 }
 function reportText(plan){
@@ -225,6 +231,7 @@ function renderPlan(plan){
   const notes=[...(plan.metadata?.warnings||[])];
   for(const group of [plan.groupA,plan.groupB]){
     if(group.unmatched?.length)notes.push('Not matched: '+group.unmatched.join(', '));
+    if(group.excluded?.length)notes.push('Excluded by review: '+group.excluded.join(', '));
     if(group.approximate?.length)notes.push('Approximate Qloo titles: '+group.approximate.map(x=>x.input+' → '+x.name).join('; '));
   }
   $('warnings').hidden=!notes.length;
@@ -258,6 +265,8 @@ async function makePlan(){
 function goBack(){++requestSerial;stage('empty-state');$('group-a').focus();}
 $('bridge-form').addEventListener('submit',event=>{event.preventDefault();checkMatches();});
 $('generate').addEventListener('click',makePlan);
+$('review-a').addEventListener('change',updateReviewEligibility);
+$('review-b').addEventListener('change',updateReviewEligibility);
 $('back-to-edit').addEventListener('click',goBack);
 $('retry').addEventListener('click',goBack);
 $('new-brief').addEventListener('click',goBack);

@@ -152,6 +152,38 @@ test('human-in-the-loop preview exposes alternatives and respects a reviewed Qlo
   assert.equal(insightLog[0][0],id(8));
   await assert.rejects(buildBridge({...input,selections:{groupA:[id(99)],groupB:[id(2)]}},client),/no longer valid/);
 });
+test('explicit review exclusions are honored even when Qloo would find a new match later',async()=>{
+  const searches=[],insights=[];
+  const client={
+    async search(name,type){
+      searches.push(name);
+      return [{id:id(name==='Dune'?1:name==='Barbie'?2:3),name,type:'movie'}];
+    },
+    async insights(type,ids){
+      insights.push(ids);
+      return [item(30)];
+    }
+  };
+  const input={groupA:'movie: Dune, movie: Uncertain Title',groupB:'movie: Barbie',category:'movie',
+    selections:{groupA:[id(1),null],groupB:[id(2)]}};
+  const plan=await buildBridge(input,client);
+  assert.deepEqual(searches,['Dune','Barbie']);
+  assert.deepEqual(plan.groupA.seeds.map(x=>x.name),['Dune']);
+  assert.deepEqual(plan.groupA.excluded,['Uncertain Title']);
+  assert.deepEqual(plan.groupA.unmatched,[]);
+  assert.equal(plan.groupB.excluded.length,0);
+  assert.ok(insights.every(ids=>!ids.includes(id(3))));
+  assert.equal(plan.overlapCount,1);
+});
+test('explicitly excluding all matches for one perspective fails instead of inventing a taste',async()=>{
+  let calls=0;
+  const client={
+    async search(){calls++;return [{id:id(1),name:'Dune',type:'movie'}];},
+    async insights(){throw Error('Must not run insights without two approved groups')}
+  };
+  await assert.rejects(buildBridge({groupA:'Dune',groupB:'Barbie',selections:{groupA:[null],groupB:[id(1)]}},client),/could not resolve/);
+  assert.equal(calls,1);
+});
 test('agent reports exploration-only when there is no agreement',async()=>{
   const client={
     async search(name){return [{id:id(name==='Adele'?1:2),name,type:'artist'}];},

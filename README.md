@@ -13,7 +13,7 @@
 CultureBridge is a transparent five-step tool-using agent, not an ungrounded chat completion:
 
 1. **Perceive:** ingest 1–3 cultural anchors for each of two audiences (film, music artist, book).
-2. **Resolve:** retrieve Qloo entity UUIDs using live **GET /search**. An unresolved seed is omitted and reported; it is never fabricated.
+2. **Resolve:** retrieve Qloo entity UUIDs using live **GET /search**. A human can confirm the matching title or explicitly **exclude** a questionable taste. Exclusions persist into the plan even if a subsequent Qloo search would find a new match. An unresolved seed is omitted and reported; it is never fabricated.
 3. **Scout independently:** use **GET /v2/insights** separately with A and B's tastes as signals, requesting up to 40 ranked candidates each.
 4. **Explore jointly:** query **GET /v2/insights** with both groups' taste signals to discover potential cultural bridges that individual list intersections may miss.
 5. **Evaluate/mediate:** compute evidence-backed two-sided overlaps, rerank by maximin fairness, or select a discovery-focused compromise that also rewards the joint Qloo result. If the initial independent result sets are full but disjoint, widen the Qloo search automatically. Deduplicate repeated entity IDs without losing their strongest rank. Distinguish verified agreement from exploratory joint-only suggestions. If there is **no confirmed overlap**, show a clearly labeled exploratory spotlight or an honest no-match explanation, with a one-click category switch. Show what each group would have selected alone, and provide an inspectable decision trail.

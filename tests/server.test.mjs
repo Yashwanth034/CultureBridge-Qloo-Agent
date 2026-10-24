@@ -69,6 +69,33 @@ test('HTTP /api/resolve returns selectable Qloo entities without starting insigh
    assert.equal(log.length,2);
  } finally {await new Promise(resolve=>server.close(resolve));}
 });
+test('HTTP reviewed exclusions prevent later auto-selection of rejected tastes',async()=>{
+  const names=[];
+  const client={
+    apiKey:'stub-private',
+    async search(name,type){
+      names.push(name);
+      return [{id:uid(name==='Dune'?1:name==='Barbie'?2:3),name,type:'movie'}];
+    },
+    async insights(){return [entity(40)]}
+  };
+  const {server,url}=await serve(client);
+  try{
+    const r=await fetch(url+'/api/plan',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        groupA:'movie: Dune, movie: Bad Match',groupB:'movie: Barbie',category:'movie',
+        selections:{groupA:[uid(1),null],groupB:[uid(2)]}
+      })
+    });
+    assert.equal(r.status,200);
+    const plan=await r.json();
+    assert.deepEqual(names,['Dune','Barbie']);
+    assert.deepEqual(plan.groupA.excluded,['Bad Match']);
+    assert.deepEqual(plan.groupA.seeds.map(x=>x.name),['Dune']);
+    assert.equal(plan.overlapCount,1);
+  }finally{await new Promise(resolve=>server.close(resolve));}
+});
 test('HTTP /api/plan preserves truthful independent evidence when optional joint Qloo fails',async()=>{
   const {QlooError}=await import('../src/qloo.mjs');
   const client={
