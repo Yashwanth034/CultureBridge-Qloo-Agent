@@ -27,7 +27,8 @@ Users can switch between movie-night, shared music, and book-club outcomes. They
 - **Adaptive agentic workflow:** validate → resolve → independently scout → jointly explore → expand Qloo searches when first-pass overlap is empty → deterministic fairness evaluation.
 - **Fairness objective:** independently returned picks earn a conservative, relative rank-based maximin score. Discovery mode also rewards strength in a separate joint Qloo ranking, while requiring independent support from both groups. Picks found only in the joint set stay exploratory. Relative rankings are never labeled probabilities or Qloo's own affinity.
 - **Node 20+ server**, server-only event key, no third-party runtime dependencies, rate control, retries and caching.
-- **Responsive interface** using accessible HTML/CSS/JavaScript with explanations and an evidence-export control.
+- **Immersive responsive product:** an original Three.js 3D scene shows two interwoven taste streams connecting, while readable profile cards and evidence panes remain accessible native HTML. Stage transitions and selected-recommendation strength affect the scene; reduced-motion/WebGL fallback requires no 3D rendering. No templates or artwork were copied.
+- **Human-in-the-loop confirmation:** after resolving inputs via Qloo /search, the app offers matching alternatives. Users select the actual cultural entities before the agent requests Qloo Insights.
 
 ## Challenges
 

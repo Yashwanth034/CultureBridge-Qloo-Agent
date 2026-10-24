@@ -25,9 +25,9 @@ All four are equally weighted. The judges decide. There is no defensible externa
 
 ## Present local verification
 
-- 19 automated tests passed on Node 20 on October 24, 2026, including HTTP server security headers, basic UI file delivery, response contract, mocked Qloo calls, caching, missing credentials, bad IDs, the 404 no-result search case, two strategies, no-overlap honesty, and genuine two-list agreement sorting.
+- 21 automated tests passed on Node 20 on October 24, 2026, including HTTP server security headers, basic UI file delivery, response contract, mocked Qloo calls, caching, missing credentials, bad IDs, the 404 no-result search case, two strategies, no-overlap honesty, and genuine two-list agreement sorting.
 - JS syntax validation: passed.
-- Browser: the redesigned desktop and mobile-sized layouts were inspected; missing-key state returned a truthful error. An independent **mock-only** local server was used solely for visual QA of recommendation cards and counters; it was stopped afterwards. This does not verify real Qloo.
+- Browser: the new immersive web interface, live Three.js render, Qloo identity-review stage, and results were inspected in Chrome. An independent **mock-only** local server supplied test entities and rankings during interaction checks. This does not verify real Qloo. The real server correctly reports that no event key is configured.
 - Public GitHub code repository has been created.
 - **No real-key Qloo request has been verified; no public hosted demo is online yet.**
 

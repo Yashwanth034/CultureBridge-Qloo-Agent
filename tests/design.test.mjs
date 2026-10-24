@@ -4,48 +4,48 @@ import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {join,dirname} from 'node:path';
 const root=join(dirname(fileURLToPath(import.meta.url)),'..');
-const source=(path)=>readFile(join(root,path),'utf8');
-
-test('redesigned page retains every control required by the real agent',async()=>{
+const source=path=>readFile(join(root,path),'utf8');
+test('real two-stage app retains all form, review and results controls',async()=>{
   const html=await source('public/index.html');
-  for(const id of ['bridge-form','group-a','group-b','category','strategy','generate',
-    'results','result-title','result-subtitle','cards','explore-section','explore-cards',
-    'warnings','trace','methodology','api-banner','api-message','export',
-    'counterfactual','counterfactual-rows','trust','count']) {
+  for(const id of ['bridge-form','group-a','group-b','category','strategy','resolve','match-review','review-a','review-b','generate',
+    'empty-state','loading-state','results','result-title','result-subtitle','cards','explore-section','explore-cards',
+    'warnings','trace','methodology','api-banner','api-message','export','featured','featured-bars',
+    'counterfactual','counterfactual-rows','trust','count','error-state','retry','back-to-edit','new-brief']) {
     assert.match(html,new RegExp('id="'+id+'"'),'Missing '+id);
   }
-  for(const link of ['href="#studio"','href="#process"']) assert.ok(html.includes(link));
   for(const value of ['value="movie"','value="artist"','value="book"','value="balanced"','value="discovery"']) assert.ok(html.includes(value));
   for(const ref of ['data-preset="cinema"','data-preset="music"','data-preset="books"']) assert.ok(html.includes(ref));
-  assert.match(html,/<label for="group-a">/);
-  assert.match(html,/<label for="group-b">/);
-  assert.match(html,/<label[^>]*for="category">/);
-  assert.match(html,/<label[^>]*for="strategy">/);
+  for(const ref of ['group-a','group-b','category','strategy']) assert.match(html,new RegExp('<label[^>]*for="'+ref+'"'));
   assert.match(html,/aria-live="polite"/);
   assert.match(html,/class="skip-link"/);
 });
-
-test('visual system includes mobile layout, accessible focus and reduced-motion fallback',async()=>{
+test('responsive workspace has meaningful mobile layouts, focus, reduced motion',async()=>{
   const css=await source('public/styles.css');
-  assert.match(css,/@media\(max-width:730px\)/);
-  assert.match(css,/@media\(max-width:420px\)/);
-  assert.match(css, /prefers-reduced-motion:reduce/);
-  assert.match(css, /focus-visible/);
-  assert.match(css, /\.studio-workspace/);
-  assert.match(css, /\.candidate/);
-  assert.match(css, /\.verified-tag/);
-  assert.match(css, /\.manifesto-section/);
+  assert.match(css,/@media\(max-width:900px\)/);
+  assert.match(css,/@media\(max-width:620px\)/);
+  assert.match(css,/prefers-reduced-motion:reduce/);
+  assert.match(css,/focus-visible/);
+  assert.match(css,/\.taste-lab/);
+  assert.match(css,/\.rank-item/);
+  assert.match(css,/\.match-review/);
 });
-
-test('page uses original CSS artwork and references public font endpoints without inline scripts',async()=>{
+test('app loads local behavior with no inline script or unsafe HTML',async()=>{
   const html=await source('public/index.html');
-  assert.match(html,/class="record"/);
-  assert.match(html,/class="paper-side paper-left"/);
-  assert.match(html,/class="paper-side paper-right"/);
-  assert.match(html,/fonts\.googleapis\.com/);
+  const js=await source('public/app.js');
   assert.match(html,/<script src="\/app\.js" defer><\/script>/);
   assert.doesNotMatch(html,/<script(?![^>]+src=)[^>]*>/);
-  const app=await source('public/app.js');
-  assert.match(app,/textContent/);
-  assert.doesNotMatch(app,/innerHTML\s*=/);
+  assert.match(js,/textContent/);
+  assert.doesNotMatch(js,/innerHTML\s*=/);
+  assert.match(js,/\/api\/resolve/);
+  assert.match(js,/\/api\/plan/);
+  assert.match(js,/aria-pressed/);
+  assert.match(js,/culturebridge:phase/);
+  assert.match(js,/culturebridge:selection/);
+  const scene=await source('public/scene.js');
+  assert.match(scene,/three@0\.181\.0/);
+  assert.match(scene,/culturebridge:phase/);
+  assert.match(scene,/culturebridge:selection/);
+  assert.match(scene,/prefers-reduced-motion/);
+  assert.match(scene,/scene-ready/);
+  assert.match(html,/<canvas id="taste-canvas"/);
 });

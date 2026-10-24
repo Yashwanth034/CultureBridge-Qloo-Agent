@@ -3,12 +3,13 @@ import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
 import {QlooClient, QlooError} from './qloo.mjs';
-import {buildBridge} from './agent.mjs';
+import {buildBridge, previewBridge} from './agent.mjs';
 
 const root=join(dirname(fileURLToPath(import.meta.url)),'..','public');
 const staticFiles=new Map([
   ['/',['index.html','text/html; charset=utf-8']],
   ['/app.js',['app.js','text/javascript; charset=utf-8']],
+  ['/scene.js',['scene.js','text/javascript; charset=utf-8']],
   ['/styles.css',['styles.css','text/css; charset=utf-8']],
   ['/favicon.svg',['favicon.svg','image/svg+xml']]
 ]);
@@ -37,7 +38,7 @@ export function createAppServer({client=new QlooClient()}={}) {
       if (req.method==='GET'&&pathname==='/api/health') {
         return send(res,200,{status:'ok',qlooConfigured:Boolean(client.apiKey),mode:'live-only'});
       }
-      if (req.method==='POST'&&pathname==='/api/plan') {
+      if (req.method==='POST'&&(pathname==='/api/plan'||pathname==='/api/resolve')) {
         const origin=req.headers.origin;
         if (origin) {
           let host;
@@ -48,14 +49,14 @@ export function createAppServer({client=new QlooClient()}={}) {
         if (!allow(req.socket.remoteAddress||'unknown')) return send(res,429,{error:'Too many plan requests. Please try again later.'});
         const payload=await bodyJson(req);
         if (!payload||typeof payload!=='object'||Array.isArray(payload)) throw new QlooError('Expected an input object.',400);
-        const plan=await buildBridge(payload,client);
-        return send(res,200,plan);
+        const result=pathname==='/api/resolve'?await previewBridge(payload,client):await buildBridge(payload,client);
+        return send(res,200,result);
       }
       if (req.method==='GET'&&staticFiles.has(pathname)) {
         const [name,contentType]=staticFiles.get(pathname);
         const contents=await readFile(join(root,name));
         res.writeHead(200,{'Content-Type':contentType,'X-Content-Type-Options':'nosniff','X-Frame-Options':'DENY',
-          'Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+          'Content-Security-Policy':"default-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
           'Cache-Control':'public, max-age=60'});
         return res.end(contents);
       }

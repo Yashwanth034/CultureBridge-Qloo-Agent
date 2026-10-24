@@ -1,6 +1,6 @@
 # CultureBridge ✳
 
-**You like this. They like that. Find the third thing.** A two-audience cultural mediation agent grounded in Qloo's live taste graph. The UI is an original warm editorial experience with interactive printed cultural-card artwork, an accessible responsive studio, and evidence-led recommendation cards.
+**Different tastes. Unexpected chemistry.** A two-audience cultural mediation agent grounded in Qloo's taste graph. The website features a custom Three.js woven-ribbon sculpture where two taste signals converge, large readable typography, side-by-side taste profiles, human confirmation of Qloo identities, and evidence-led interactive results. The sculpture reacts to the discovery stage, with a reduced-motion and WebGL fallback.
 
 **Built for the [Qloo Agentic Hackathon 2026](https://qloo.devpost.com/)**. CultureBridge helps community event coordinators, friendship groups, and campus club organizers choose film, music, or book experiences that neither audience has to sacrifice their tastes for.
 

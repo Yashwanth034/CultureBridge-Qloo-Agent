@@ -47,14 +47,34 @@ export function reconcile(a,b,joint,max=6,strategy='balanced') {
     .sort((x,y)=>x.discoveryRank-y.discoveryRank);
   return {agreement:agreement.slice(0,max),exploratory:exploratory.slice(0,max),overlapCount:agreement.length};
 }
-async function resolve(seeds,client) {
+export async function previewBridge(input, client) {
+  const seedsA=parseSeeds(input.groupA),seedsB=parseSeeds(input.groupB);
+  const lookup=async (seeds)=>{
+    const rows=[];
+    for(const seed of seeds) {
+      const matches=(await client.search(seed.name,seed.type))
+        .filter((x)=>x.type && TYPES.has(x.type)).slice(0,5)
+        .map((x)=>({id:x.id,name:x.name,type:x.type,exact:x.name.toLowerCase()===seed.name.toLowerCase()}));
+      const suggested=matches.find((x)=>x.exact)||matches[0];
+      rows.push({input:seed.name,type:seed.type,matches,suggestedId:suggested?.id||null});
+    }
+    return rows;
+  };
+  return {groupA:await lookup(seedsA),groupB:await lookup(seedsB),source:'qloo-live'};
+}
+async function resolve(seeds,client,chosenIds=[]) {
   const resolved=[],unmatched=[];
-  for (const seed of seeds) {
-    const candidates=await client.search(seed.name,seed.type);
+  for (let i=0;i<seeds.length;i++) {
+    const seed=seeds[i];
+    const candidates=(await client.search(seed.name,seed.type)).filter((x)=>x.type && TYPES.has(x.type));
+    const selected=chosenIds[i];
+    if (selected!==undefined && selected!==null && (typeof selected!=='string'|| !candidates.some((x)=>x.id===selected))) {
+      throw new QlooError('One of the selected Qloo entities is no longer valid. Review the names again.',422);
+    }
     const exact=candidates.find((x)=>x.name.toLowerCase()===seed.name.toLowerCase());
-    const chosen=exact||candidates[0];
-    if (!chosen||!chosen.type) {unmatched.push(seed.name);continue;}
-    resolved.push({input:seed.name,name:chosen.name,id:chosen.id,type:chosen.type,exact:Boolean(exact)});
+    const chosen=selected?candidates.find((x)=>x.id===selected):(exact||candidates[0]);
+    if (!chosen) {unmatched.push(seed.name);continue;}
+    resolved.push({input:seed.name,name:chosen.name,id:chosen.id,type:chosen.type,exact:chosen.name.toLowerCase()===seed.name.toLowerCase()});
   }
   return {resolved,unmatched};
 }
@@ -65,7 +85,13 @@ export async function buildBridge(input,client) {
   const strategy=String(input.strategy||'balanced');
   if (!['balanced','discovery'].includes(strategy)) throw new QlooError('Choose a valid mediation strategy.',400);
   const trace=['Validated two audience profiles'];
-  const a=await resolve(sa,client),b=await resolve(sb,client);
+  const selections=input.selections||{};
+  if(typeof selections!=='object'||Array.isArray(selections) ||
+     (selections.groupA!==undefined && (!Array.isArray(selections.groupA)||selections.groupA.length>3)) ||
+     (selections.groupB!==undefined && (!Array.isArray(selections.groupB)||selections.groupB.length>3))) {
+    throw new QlooError('Invalid taste selections.',400);
+  }
+  const a=await resolve(sa,client,selections.groupA||[]),b=await resolve(sb,client,selections.groupB||[]);
   if (!a.resolved.length||!b.resolved.length) throw new QlooError('Qloo could not resolve enough tastes. Try well-known titles with movie: or artist: prefixes.',422);
   trace.push('Resolved actual Qloo cultural entities');
   const idsA=[...new Set(a.resolved.map((x)=>x.id))],idsB=[...new Set(b.resolved.map((x)=>x.id))];

@@ -2,137 +2,114 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#f3f0e7">
-  <meta name="description" content="A better way to agree on movie night. CultureBridge uses Qloo's taste intelligence to find the unexpected middle between two people's interests.">
-  <title>CultureBridge — Find the third thing.</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#08090d">
+  <meta name="description" content="CultureBridge — a shared-taste discovery experience powered by Qloo's real cultural intelligence.">
+  <title>CultureBridge — Meet in the middle.</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
   <script src="/app.js" defer></script>
+  <script src="/scene.js" type="module"></script>
 </head>
 <body>
   <a class="skip-link" href="#studio">Skip to the taste studio</a>
-  <header class="site-header">
-    <div class="shell nav">
-      <a class="wordmark" href="/" aria-label="CultureBridge home"><span class="logo-glyph" aria-hidden="true"><i></i><i></i></span><span>culture<span class="wordmark-end">bridge</span><span class="wordmark-dot">.</span></span></a>
-      <nav class="nav-links" aria-label="Main navigation">
-        <a href="#idea">The idea</a>
-        <a href="#process">How it works</a>
-        <a class="nav-start" href="#studio">Open the studio <span aria-hidden="true">↗</span></a>
-      </nav>
-      <a class="mobile-nav-start" href="#studio">Try it <span aria-hidden="true">↗</span></a>
+  <div class="backdrop" aria-hidden="true"><div class="backdrop-halo"></div><div class="backdrop-grain"></div></div>
+  <header class="topbar">
+    <a class="brand-lockup" href="/" aria-label="CultureBridge home">
+      <span class="brand-symbol" aria-hidden="true">✳</span>
+      <span class="brand-name">culturebridge<span class="brand-dot">.</span></span>
+    </a>
+    <span class="top-mid"><span class="top-mid-spark">✧</span> THE ART OF FINDING COMMON GROUND</span>
+    <div class="top-actions">
+      <div id="api-banner" class="connection" role="status"><span class="status-symbol"></span><span id="api-message">Checking Qloo connection</span></div>
+      <a class="about-link" href="#how">THE METHOD <span aria-hidden="true">↗</span></a>
     </div>
   </header>
-
-  <main>
-    <section class="hero shell" id="idea">
-      <div class="hero-copy">
-        <p class="eyebrow"><span class="eyebrow-dot"></span> AN EXPERIMENT IN COMMON GROUND <span class="edition">/ EDITION Nº 01</span></p>
-        <h1>You like <span class="underlined">this.</span><br>They like <span class="underlined">that.</span><br>Find the <em>third thing.</em></h1>
-        <p class="intro">For every “what should we watch?” that turned into a twenty-minute debate. Discover the unexpected stuff two completely different people might love together.</p>
-        <div class="hero-actions">
-          <a class="cta cta-dark" href="#studio">Find our middle <span aria-hidden="true">↗</span></a>
-          <span class="cta-aside">NO LOGIN. NO GUESSWORK.<br>JUST BETTER TASTE.</span>
-        </div>
-        <div class="hero-footnote"><span class="tiny-star" aria-hidden="true">✳</span><span>Powered by cultural intelligence from <strong>Qloo</strong>, not generic AI opinions.</span></div>
+  <main class="app-main">
+    <section class="intro-band" aria-labelledby="page-title">
+      <div class="intro-copy">
+        <p class="overline"><span class="overline-line"></span> TWO PERSPECTIVES <span class="overline-x">×</span> ONE POSSIBILITY</p>
+        <h1 id="page-title">Different tastes.<br><em>Unexpected chemistry.</em></h1>
       </div>
-      <div class="hero-art" role="img" aria-label="Editorial paper collage showing two very different cultural taste worlds overlapping into a shared third choice">
-        <div class="art-grid" aria-hidden="true"></div>
-        <div class="paper-side paper-left" aria-hidden="true">
-          <span class="paper-kicker">01 / THEIR PICKS</span>
-          <span class="paper-heading">The<br>dreamer.</span>
-          <span class="paper-foot">CINEMA · WORLDS · WONDER</span>
-          <span class="ring ring-a"></span>
-        </div>
-        <div class="paper-side paper-right" aria-hidden="true">
-          <span class="paper-kicker">02 / YOUR PICKS</span>
-          <span class="paper-heading">The<br>groover.</span>
-          <span class="paper-foot">MUSIC · RHYTHM · ENERGY</span>
-          <span class="record"><span class="record-center"></span></span>
-        </div>
-        <div class="bridge-sticker" aria-hidden="true"><span>THE GOOD<br>STUFF IS<br>IN THE</span><strong>MIDDLE.</strong><span class="sticker-arrow">↘</span></div>
-        <div class="art-number" aria-hidden="true">CB—001 &nbsp; / &nbsp; OPPOSITES ATTRACT</div>
-        <div class="art-footer" aria-hidden="true">TWO WORLDS, ONE NIGHT. <span>↗</span></div>
-      </div>
+      <p class="intro-side">The best discoveries happen between two worlds. Bring yours together and discover the music, films and stories you both might love.</p>
     </section>
-
-    <div class="ticker" aria-hidden="true"><div class="ticker-track"><span>GOOD TASTE DOESN'T HAVE TO MATCH</span><b>✳</b><span>BETTER TOGETHER</span><b>✳</b><span>NO MORE “YOU PICK”</span><b>✳</b><span>GOOD TASTE DOESN'T HAVE TO MATCH</span><b>✳</b><span>BETTER TOGETHER</span><b>✳</b><span>NO MORE “YOU PICK”</span><b>✳</b></div></div>
-
-    <section class="studio-section" id="studio" aria-labelledby="studio-heading">
-      <div class="shell studio-shell">
-        <div class="section-lead">
-          <div class="section-index"><span class="asterisk" aria-hidden="true">✳</span><span>01 — THE TASTE STUDIO</span></div>
-          <div class="section-lead-main">
-            <h2 id="studio-heading">Let's find a <em>common obsession.</em></h2>
-            <p>Two taste profiles. One shared adventure. Tell us what each side is into and we'll look for the surprising connections.</p>
+    <section class="taste-lab" id="studio" aria-label="Interactive taste discovery studio">
+      <div class="lab-head">
+        <div class="lab-headline"><span class="lab-step">01</span><span>BUILD YOUR CONNECTION</span></div>
+        <div class="lab-status"><span class="status-ping"></span><span id="phase-indicator">READY TO EXPLORE</span></div>
+      </div>
+      <form id="bridge-form" class="lab-form">
+        <div class="profile profile-a">
+          <div class="profile-top"><span class="profile-tag"><span class="profile-spot"></span> WORLD A</span><span class="profile-no">01 / 02</span></div>
+          <div class="profile-copy"><span class="profile-letter">A</span><div><h2><label for="group-a">Your world</label></h2><p>The things you keep coming back to.</p></div></div>
+          <textarea id="group-a" rows="3" maxlength="500" required spellcheck="false" placeholder="movie: Interstellar, artist: Daft Punk">movie: Interstellar, artist: Daft Punk</textarea>
+          <span class="input-helper">MOVIES, ARTISTS OR BOOKS · UP TO THREE</span>
+        </div>
+        <div class="taste-stage" aria-label="Animated connection between taste profiles">
+          <div id="scene-visual" class="scene-visual" aria-hidden="true">
+            <div class="scene-fallback"><span class="fallback-ribbon ribbon-a"></span><span class="fallback-ribbon ribbon-b"></span><span class="fallback-center">✳</span></div>
+            <canvas id="taste-canvas" aria-hidden="true"></canvas>
+          </div>
+          <div class="orbit-label orbit-label-a" aria-hidden="true"><span>01</span> YOUR SIGNAL</div>
+          <div class="orbit-label orbit-label-b" aria-hidden="true"><span>02</span> THEIR SIGNAL</div>
+          <div class="stage-center" id="empty-state">
+            <span class="stage-kicker">THE UNKNOWN IN BETWEEN</span>
+            <span class="stage-indicator" aria-hidden="true">✳</span>
           </div>
         </div>
-        <div class="studio-workspace">
-          <form id="bridge-form">
-            <div class="form-topline"><span>YOUR TWO SIDES</span><span>STEP 01 / 02</span></div>
-            <div class="groups">
-              <div class="group-input group-a">
-                <div class="profile-head"><span class="profile-index">A</span><div><label for="group-a">Side one</label><p>The things you can't stop talking about.</p></div></div>
-                <textarea id="group-a" maxlength="500" rows="3" spellcheck="false" required placeholder="movie: Interstellar, artist: Daft Punk">movie: Interstellar, artist: Daft Punk</textarea>
-                <span class="input-footnote">UP TO THREE FAVORITES · SEPARATE WITH COMMAS</span>
-              </div>
-              <div class="versus" aria-hidden="true"><span>AND</span></div>
-              <div class="group-input group-b">
-                <div class="profile-head"><span class="profile-index">B</span><div><label for="group-b">Side two</label><p>Their entirely different universe.</p></div></div>
-                <textarea id="group-b" maxlength="500" rows="3" spellcheck="false" required placeholder="movie: Spirited Away, artist: BTS">movie: Spirited Away, artist: BTS</textarea>
-                <span class="input-footnote">MOVIES, MUSIC ARTISTS AND BOOKS WORK BEST</span>
-              </div>
-            </div>
-            <div class="presets"><span>NEED INSPIRATION?</span><button type="button" data-preset="cinema">Movie night <span aria-hidden="true">↗</span></button><button type="button" data-preset="music">Opposite playlists <span aria-hidden="true">↗</span></button><button type="button" data-preset="books">Book club <span aria-hidden="true">↗</span></button></div>
-            <div class="form-divider"></div>
-            <div class="form-topline form-step"><span>WHAT ARE WE MAKING?</span><span>STEP 02 / 02</span></div>
-            <div class="bottom-form">
-              <div class="select-field"><label class="input-label" for="category">Find something to...</label><select id="category"><option value="movie">Watch together (movies)</option><option value="artist">Listen to together (artists)</option><option value="book">Read together (books)</option></select></div>
-              <div class="select-field"><label class="input-label" for="strategy">Our approach</label><select id="strategy"><option value="balanced">Keep it fair to both</option><option value="discovery">Surprise us with something new</option></select></div>
-              <button id="generate" class="cta cta-orange" type="submit"><span>Find our third thing</span><span class="cta-arrow" aria-hidden="true">↗</span></button>
-            </div>
-            <p class="form-note">A tiny tip: include <code>movie:</code>, <code>artist:</code> or <code>book:</code> before a name to help Qloo match it. We don't store your tastes.</p>
-          </form>
-          <aside class="studio-sidebar">
-            <div class="sidebar-label">A NOTE FROM THE LAB</div>
-            <div class="side-drawing" aria-hidden="true"><span class="draw-circle draw-a">YOU</span><span class="draw-circle draw-b">THEM</span><span class="draw-star">✳</span></div>
-            <h3>It's not about compromise.</h3>
-            <p>It's about finding what you'd never have discovered alone.</p>
-            <div id="api-banner" class="api-banner" role="status"><span class="status-symbol" aria-hidden="true">◌</span><span id="api-message">Checking our live taste connection…</span></div>
-            <div class="sidebar-meta"><span>BUILT WITH <strong>QLOO</strong></span><span>100% TASTE-LED</span></div>
-          </aside>
+        <div class="profile profile-b">
+          <div class="profile-top"><span class="profile-tag"><span class="profile-spot"></span> WORLD B</span><span class="profile-no">02 / 02</span></div>
+          <div class="profile-copy"><span class="profile-letter">B</span><div><h2><label for="group-b">Their world</label></h2><p>Their entirely different kind of magic.</p></div></div>
+          <textarea id="group-b" rows="3" maxlength="500" required spellcheck="false" placeholder="movie: Spirited Away, artist: BTS">movie: Spirited Away, artist: BTS</textarea>
+          <span class="input-helper">COMMAS SEPARATE DIFFERENT TASTES</span>
         </div>
+        <div class="lab-controls">
+          <div class="lab-presets">
+            <span class="field-eyebrow">TRY A STORY</span>
+            <div class="quickstart-row">
+              <button type="button" data-preset="cinema" class="example-pill">Movie night <span aria-hidden="true">↗</span></button>
+              <button type="button" data-preset="music" class="example-pill">Different playlists <span aria-hidden="true">↗</span></button>
+              <button type="button" data-preset="books" class="example-pill">Book club <span aria-hidden="true">↗</span></button>
+            </div>
+          </div>
+          <div class="form-options">
+            <div class="input-wrap"><label for="category">WHAT SHOULD WE FIND?</label><select id="category"><option value="movie">A movie</option><option value="artist">A music artist</option><option value="book">A book</option></select></div>
+            <div class="input-wrap"><label for="strategy">WHAT MATTERS MOST?</label><select id="strategy"><option value="balanced">Fair to both</option><option value="discovery">Something new</option></select></div>
+          </div>
+          <button type="submit" id="resolve" class="primary-action"><span>Find our connection</span><span class="action-icon" aria-hidden="true">↗</span></button>
+        </div>
+        <p class="privacy-note"><span aria-hidden="true">✧</span> Real Qloo cultural signals. No login or saved taste profiles.</p>
+      </form>
+      <div class="output" aria-labelledby="output-heading">
+        <div class="output-head"><div><span class="output-index">02 / THE DISCOVERY</span><h2 id="output-heading">What connects us<span class="dot">.</span></h2></div><span class="output-side">A GOOD STORY HAS TWO SIDES.</span></div>
+        <div id="loading-state" class="loading-state" hidden role="status" aria-live="polite"><span class="working-symbol" aria-hidden="true">✳</span><h3 id="loading-title">Tracing connections…</h3><p id="loading-detail">Our agent is looking for cultural common ground in the Qloo taste graph.</p><div class="working-bar"><span></span></div></div>
+        <section id="match-review" class="match-review" hidden aria-labelledby="review-heading">
+          <div class="review-intro"><span class="mini-label">STEP ONE — CONFIRM YOUR TASTES</span><h3 id="review-heading">Did we find the <em>right things?</em></h3><p>Names can mean different things. Review the real Qloo matches so your discovery starts with the right identities.</p></div>
+          <div class="review-columns"><div id="review-a" class="review-group"></div><div id="review-b" class="review-group"></div></div>
+          <div id="review-warning" class="inline-warning" hidden role="alert"></div>
+          <div class="review-actions"><button id="generate" class="primary-action" type="button"><span>Reveal our shared discoveries</span><span class="action-icon" aria-hidden="true">↗</span></button><button id="back-to-edit" type="button" class="text-action">← Change the tastes</button></div>
+        </section>
+        <section id="results" class="results" hidden aria-live="polite" aria-busy="false">
+          <div class="results-header"><div><span class="mini-label">STEP TWO — THE REVEAL</span><h3 id="result-title">Your shared discoveries.</h3><p id="result-subtitle"></p></div><button type="button" id="export" class="export-button">Copy evidence report <span aria-hidden="true">↗</span></button></div>
+          <div class="summary-strip"><div><span class="strip-label">CONFIDENCE TYPE</span><strong id="trust">—</strong></div><div><span class="strip-label">COMMON-GROUND PICKS</span><strong id="count">—</strong></div><div><span class="strip-label">SOURCE</span><strong>Qloo / Live</strong></div></div>
+          <div id="warnings" class="inline-warning" hidden role="alert"></div>
+          <div class="result-layout">
+            <div class="ranked-area"><h4>THE SHARED SHORTLIST <span>SELECT A PICK ↗</span></h4><div class="ranked-list" id="cards"></div></div>
+            <div id="featured" class="featured" hidden><div class="featured-head"><span class="mini-label">INSIDE THE MATCH</span><span class="featured-mark" aria-hidden="true">✳</span></div><h4 id="featured-title"></h4><p id="featured-evidence"></p><div id="featured-bars" class="featured-bars"></div><p class="heuristic-note">The balance score compares relative Qloo list positions. It is not an affinity percentage or a prediction.</p></div>
+          </div>
+          <div class="counterfactual" id="counterfactual" hidden><div class="section-heading-inline"><h4>What if one side picked alone?</h4><span>THE ALTERNATIVE</span></div><div id="counterfactual-rows" class="counterfactual-rows"></div><p class="counterfactual-disclaimer">Aggregate cultural connections don't guarantee that any particular person will enjoy an option.</p></div>
+          <div id="explore-section" class="explore-section" hidden><div class="section-heading-inline"><h4>Beyond the obvious</h4><span>EXPLORATORY ONLY</span></div><p>These appeared in the combined Qloo query, but weren't independently returned for both groups.</p><div id="explore-cards" class="explore-grid"></div></div>
+          <details class="evidence" id="method-note"><summary>See how the agent reached its decision <span aria-hidden="true">+</span></summary><ol id="trace"></ol><p id="methodology"></p></details>
+          <button id="new-brief" type="button" class="reset-button">↶ Discover another combination</button>
+        </section>
+        <div id="error-state" class="error-state" hidden role="alert"><span class="mini-label">A SIGNAL WAS INTERRUPTED</span><h3>We couldn't complete this connection.</h3><p id="error-message"></p><button id="retry" type="button" class="secondary-action">← Back to the tastes</button></div>
       </div>
     </section>
-
-    <section class="results-section shell" id="results" hidden aria-live="polite" aria-busy="false" aria-labelledby="result-title">
-      <div class="results-heading"><div class="result-lead"><p class="eyebrow"><span class="eyebrow-dot"></span> 02 / THE REVEAL</p><h2 id="result-title">Here is the <em>good stuff.</em></h2><p id="result-subtitle"></p></div><button class="subtle-button" id="export" type="button">Copy evidence report <span aria-hidden="true">↗</span></button></div>
-      <div class="summary-strip"><div><span class="strip-label">THE VERDICT</span><strong id="trust">—</strong></div><div><span class="strip-label">SHARED PICKS</span><strong id="count">—</strong></div><div><span class="strip-label">OUR SOURCE</span><strong>Live Qloo taste data</strong></div></div>
-      <div id="warnings" class="warnings" hidden></div>
-      <div id="cards" class="cards"></div>
-      <div class="counterfactual" id="counterfactual" hidden><p class="eyebrow">THE BEFORE &amp; AFTER</p><h3>What if one side picked alone?</h3><div id="counterfactual-rows" class="counterfactual-rows"></div><p class="counterfactual-disclaimer">A shared ranking is evidence of cultural alignment, not proof that everyone will personally enjoy a pick.</p></div>
-      <div class="result-section" id="explore-section" hidden><div class="explore-heading"><h3>For the adventurous <span class="tag">EXPLORATORY PICKS</span></h3><p>From Qloo's combined taste signal, but not independently ranked for both sides. Interesting to explore, not verified agreement.</p></div><div id="explore-cards" class="explore-grid"></div></div>
-      <details class="evidence"><summary>Behind the recommendation <span class="details-arrow" aria-hidden="true">↗</span></summary><ol id="trace"></ol><p id="methodology"></p></details>
-    </section>
-
-    <section class="manifesto-section" id="process">
-      <div class="shell manifesto-grid">
-        <div class="manifesto-heading"><div class="section-index"><span class="asterisk" aria-hidden="true">✳</span><span>02 — HOW IT WORKS</span></div><h2>Less “algorithm.”<br>More <em>aha!</em></h2><p>We don't make up a clever-sounding answer. Every verified shared pick has to show up in real Qloo recommendations for both sides.</p></div>
-        <div class="process-steps">
-          <article><span>01 / LISTEN</span><h3>Two people, two worlds.</h3><p>Tell us the movies, artists or books that each side really loves. We resolve those into real cultural identities.</p></article>
-          <article><span>02 / CONNECT</span><h3>Find the invisible thread.</h3><p>Qloo explores the tastes separately, then together, to uncover cultural connections you'd probably never think to search for.</p></article>
-          <article><span>03 / DECIDE</span><h3>Give both sides a say.</h3><p>We privilege shared evidence over one-sided popularity, show our reasoning and clearly mark what is only a possibility.</p></article>
-        </div>
-      </div>
-    </section>
-    <section class="closing shell">
-      <div><span class="closing-kicker">THE WORLD IS BIGGER THAN YOUR BUBBLE.</span><h2>Different is<br><em>the interesting part.</em></h2></div>
-      <a class="cta cta-dark" href="#studio">Give it a go <span aria-hidden="true">↗</span></a>
-    </section>
+    <section id="how" class="how-section"><div><span class="how-kicker">BEHIND THE MAGIC</span><h2>Not a guess.<br><em>A discovery backed by real taste.</em></h2></div><p>We resolve your favorites to actual Qloo identities, explore each world independently, then find what shows up for both. Anything only suggested by the combined query is clearly labeled exploratory.</p><a href="#studio">EXPLORE AGAIN ↗</a></section>
+    <footer class="app-footer"><span>✳ <strong>culturebridge.</strong> <span>A little more together.</span></span><div><a href="https://qloo.devpost.com/" target="_blank" rel="noopener noreferrer">QLOO AGENTIC HACKATHON ↗</a><span>© 2026</span></div></footer>
   </main>
-  <footer class="site-footer"><div class="shell footer-top"><span>INDEPENDENTLY MADE FOR THE QLOO AGENTIC HACKATHON / 2026</span><a href="https://qloo.devpost.com/" target="_blank" rel="noopener noreferrer">EXPLORE THE HACKATHON ↗</a></div><div class="shell footer-bottom"><span class="footer-wordmark">culturebridge<span>.</span></span><span>MADE FOR FINDING THE MIDDLE. © 2026</span></div></footer>
 </body>
 </html>

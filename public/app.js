@@ -1,147 +1,224 @@
 'use strict';
-const $=(id)=>document.getElementById(id);
-const form=$('bridge-form'),button=$('generate'),results=$('results');
-let latest=null;
+/* Real two-stage agent interface: resolve entities → human review → Qloo insights. */
+const $=id=>document.getElementById(id);
+const stages=['empty-state','loading-state','match-review','results','error-state'];
 const presets={
   cinema:{a:'movie: Interstellar, artist: Daft Punk',b:'movie: Spirited Away, artist: BTS',category:'movie'},
   music:{a:'artist: Radiohead, movie: Dune',b:'artist: Taylor Swift, movie: Barbie',category:'artist'},
   books:{a:'book: Dune, movie: Arrival',b:'book: Pride and Prejudice, artist: Adele',category:'book'}
 };
-document.querySelectorAll('[data-preset]').forEach((el)=>el.addEventListener('click',()=>{
-  const p=presets[el.dataset.preset];$('group-a').value=p.a;$('group-b').value=p.b;$('category').value=p.category;
-  $('group-a').focus();
-}));
-function make(tag,cls,txt) {
-  const node=document.createElement(tag);
-  if(cls)node.className=cls;
-  if(txt!==undefined)node.textContent=String(txt);
-  return node;
+let draft=null, preview=null, latest=null, selectedIndex=0, requestSerial=0;
+const el=(tag,className,text)=>{
+  const item=document.createElement(tag);
+  if(className)item.className=className;
+  if(text!==undefined)item.textContent=String(text);
+  return item;
+};
+function stage(name) {
+  for(const id of stages)$(id).hidden=id!==name;
+  $('phase-indicator').textContent=({ 'empty-state':'NOT STARTED','loading-state':'WORKING','match-review':'REVIEW THE MATCHES','results':'SHORTLIST READY','error-state':'NEEDS ATTENTION'})[name];
+  $('results').setAttribute('aria-busy','false');
+  document.dispatchEvent(new CustomEvent('culturebridge:phase',{detail:{phase:name}}));
 }
-function showError(message) {
-  results.hidden=false;results.setAttribute('aria-busy','false');
-  $('result-title').textContent='We need one more ingredient.';
-  $('result-subtitle').textContent=message;
-  $('warnings').hidden=true;$('counterfactual').hidden=true;
-  $('cards').replaceChildren();$('explore-section').hidden=true;
-  document.querySelector('.summary-strip').hidden=true;
-  document.querySelector('.evidence').hidden=true;
-  $('export').hidden=true;
-  results.scrollIntoView({behavior:'smooth',block:'start'});
+function updateDraft(){return {groupA:$('group-a').value,groupB:$('group-b').value,category:$('category').value,strategy:$('strategy').value};}
+async function post(path,payload){
+  const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  let data;
+  try{data=await response.json();}catch{throw new Error('The server returned an unreadable response.');}
+  if(!response.ok)throw new Error(data.error||'Unable to complete the request.');
+  return data;
 }
-function reportText(plan) {
-  const lines=[
-    '# CultureBridge evidence report',
-    'Evidence source: Live Qloo Insights API',
-    'State: '+plan.state,
-    'Category: '+plan.category,
-    'Mediation strategy: '+plan.strategy,
-    'Group A unilateral pick: '+(plan.comparison.unmediatedA?.name||'none'),
-    'Group B unilateral pick: '+(plan.comparison.unmediatedB?.name||'none'),
-    'First profile: '+plan.groupA.seeds.map((x)=>x.name+' ('+x.type+')').join(', '),
-    'Second profile: '+plan.groupB.seeds.map((x)=>x.name+' ('+x.type+')').join(', '),
-    '',
-    'Verified overlap: '+plan.overlapCount,
-    ...plan.candidates.map((x)=>'- '+x.name+' | relative rank score '+x.score+' | A #'+x.groupARank+' | B #'+x.groupBRank),
-    '',
-    'Exploratory (not validated for both groups):',
-    ...plan.exploratory.map((x)=>'- '+x.name+' | joint rank #'+x.discoveryRank),
-    '',
-    plan.metadata.explanation,
-    'Note: Relative rank points are not probabilities or upstream Qloo affinity scores.'
-  ];
-  return lines.join('\n');
+function setLoading(title,detail){
+  stage('loading-state');$('loading-title').textContent=title;$('loading-detail').textContent=detail;
 }
-$('export').addEventListener('click',async()=>{
-  if(!latest)return;
-  try {await navigator.clipboard.writeText(reportText(latest));$('export').textContent='Copied ✓';}
-  catch {$('export').textContent='Clipboard not available';}
-});
-function candidateCard(x,index) {
-  const article=make('article','candidate');
-  const upper=make('div','candidate-top');
-  const rank=make('span','candidate-rank',String(index+1).padStart(2,'0'));
-  const pill=make('span','verified-tag','✳  VERIFIED TWO-SIDED MATCH');
-  upper.append(rank,pill);
-  const name=make('h3','candidate-name',x.name);
-  const text=make('p','candidate-description','Independently recommended by Qloo for both groups. The bars reflect relative list position.');
-  const comparison=make('div','comparison');
-  for(const [label,value,kind,sourceRank] of [
-    ['FIRST PROFILE',x.groupAScore,'first',x.groupARank],
-    ['SECOND PROFILE',x.groupBScore,'second',x.groupBRank]
-  ]) {
-    const row=make('div','comparison-row');
-    const head=make('div','comparison-head');
-    head.append(make('span','',label),make('span','', 'QLOO RANK #'+sourceRank));
-    const track=make('div','bar-track');
-    const fill=make('div','bar-fill '+kind);fill.style.width=Math.max(0,Math.min(100,value))+'%';
-    track.append(fill);row.append(head,track);comparison.append(row);
+function showError(error){
+  stage('error-state');
+  $('error-message').textContent=error instanceof Error?error.message:String(error);
+}
+function reviewGroup(target,rows,label,group){
+  const wrap=$(target);
+  const title=el('div','review-group-title');
+  title.append(el('span','',label),el('span','',rows.length+' TASTE SIGNAL'+(rows.length===1?'':'S')));
+  wrap.replaceChildren(title);
+  rows.forEach((seed,index)=>{
+    const row=el('div','review-entry');
+    const side=el('div');
+    side.append(el('span','review-input-label',seed.input),el('span','review-type',seed.type||'Type not specified'));
+    const field=el('div');
+    const control=el('select','choice-select');
+    control.dataset.group=group;
+    control.dataset.index=String(index);
+    control.setAttribute('aria-label','Qloo match for '+seed.input);
+    if(!seed.matches.length){
+      const option=el('option','','No Qloo match — excluded');option.value='';control.append(option);
+      control.disabled=true;
+      field.append(control,el('p','review-note','Try editing this name if it is important to your plan.'));
+    }else{
+      for(const match of seed.matches){
+        const suffix=match.type?' · '+match.type:'';
+        const option=el('option','',match.name+suffix+(match.exact?' · exact':''));
+        option.value=match.id;
+        if(match.id===seed.suggestedId)option.selected=true;
+        control.append(option);
+      }
+      const note=seed.matches.find(x=>x.id===seed.suggestedId)?.exact
+        ?'Exact title matched to a Qloo entity.'
+        :'Suggested match. Check the title before continuing.';
+      field.append(control,el('p','review-note',note));
+    }
+    row.append(side,field);wrap.append(row);
+  });
+}
+function renderPreview(data){
+  preview=data;
+  reviewGroup('review-a',data.groupA,'GROUP A / FIRST PERSPECTIVE','groupA');
+  reviewGroup('review-b',data.groupB,'GROUP B / SECOND PERSPECTIVE','groupB');
+  const countA=data.groupA.filter(x=>x.matches.length).length;
+  const countB=data.groupB.filter(x=>x.matches.length).length;
+  const issue=$( 'review-warning');
+  issue.hidden=Boolean(countA&&countB);
+  issue.textContent=countA&&countB?'':'Each side must have at least one matched Qloo entity. Edit your preferences and check again.';
+  $('generate').disabled=!(countA&&countB);
+  stage('match-review');
+}
+function collectSelections(group){
+  const rows=preview[group];
+  return rows.map((_,i)=>{
+    const select=document.querySelector('.choice-select[data-group="'+group+'"][data-index="'+i+'"]');
+    return select&&!select.disabled?select.value:null;
+  });
+}
+function reportText(plan){
+  return [
+    'CultureBridge / taste session','Source: Qloo live API','Category: '+plan.category,
+    'Mode: '+plan.strategy,'Status: '+plan.state,
+    'Group A: '+plan.groupA.seeds.map(x=>x.name).join(', '),
+    'Group B: '+plan.groupB.seeds.map(x=>x.name).join(', '),
+    'Verified shared options: '+plan.overlapCount,'',
+    ...plan.candidates.map(x=>x.name+' / A #'+x.groupARank+' / B #'+x.groupBRank+' / heuristic '+x.score),
+    '','Exploratory (not independently verified for both):',
+    ...plan.exploratory.map(x=>x.name+' / joint Qloo rank #'+x.discoveryRank),
+    '',plan.metadata.explanation,'Do not interpret these scores as Qloo affinities or probabilities.'
+  ].join('\n');
+}
+function selectCandidate(index){
+  if(!latest||!latest.candidates[index])return;
+  selectedIndex=index;
+  const x=latest.candidates[index];
+  document.dispatchEvent(new CustomEvent('culturebridge:selection',{detail:{balance:x.score,rankA:x.groupARank,rankB:x.groupBRank}}));
+  $('featured').hidden=false;
+  $('featured-title').textContent=x.name;
+  $('featured-evidence').textContent=x.evidence;
+  const bars=[];
+  for(const [title,value,rank,color] of [
+    ['Perspective A',x.groupAScore,x.groupARank,'first'],
+    ['Perspective B',x.groupBScore,x.groupBRank,'second']]){
+    const row=el('div','evidence-row');
+    const head=el('div','bar-top');
+    head.append(el('span','',title),el('span','','#'+rank+' IN QLOO'));
+    const track=el('div','bar-track');
+    const fill=el('div','bar-fill '+color);
+    fill.style.width=Math.min(100,Math.max(0,value))+'%';
+    track.append(fill);row.append(head,track);bars.push(row);
   }
-  const footer=make('div','candidate-footer');
-  const balance=make('div','balance');
-  balance.append(make('strong','',x.score+' / 100'),make('span','','relative balance · our heuristic'));
-  footer.append(balance,make('p','evidence-copy',x.evidence));
-  article.append(upper,name,text,comparison,footer);
-  return article;
+  $('featured-bars').replaceChildren(...bars);
+  document.querySelectorAll('.rank-item').forEach((node,i)=>{
+    node.classList.toggle('selected',i===index);
+    node.setAttribute('aria-pressed',String(i===index));
+  });
 }
-function render(plan) {
-  latest=plan;results.hidden=false;results.setAttribute('aria-busy','false');
-  document.querySelector('.summary-strip').hidden=false;
-  document.querySelector('.evidence').hidden=false;
-  $('export').hidden=false;$('export').textContent='Copy evidence report ↗';
+function resultRow(x,index){
+  const button=el('button','rank-item');
+  button.type='button';
+  const number=el('span','rank-no',String(index+1).padStart(2,'0'));
+  const nameWrap=el('span');
+  nameWrap.append(el('span','rank-name',x.name),el('span','rank-sub','Group A #'+x.groupARank+'  ·  Group B #'+x.groupBRank));
+  button.append(number,nameWrap,el('span','rank-number',x.score),el('span','rank-arr','↗'));
+  button.addEventListener('click',()=>selectCandidate(index));
+  return button;
+}
+function renderPlan(plan){
+  latest=plan;selectedIndex=0;
+  stage('results');
   const verified=plan.state==='grounded-overlap';
-  $('result-title').textContent=verified?'Here is where your worlds overlap.':'Our agent found possibilities, not proven agreement.';
-  $('result-subtitle').textContent=verified?'Every featured pick was surfaced independently by Qloo for both sides.':'The two independent result sets did not intersect. Try different seeds or a different category.';
-  $('trust').textContent=verified?'TWO-SIDED EVIDENCE':'EXPLORATORY ONLY';
+  $('result-title').textContent=verified?'Here’s what you share.':'No confirmed overlap—yet.';
+  $('result-subtitle').textContent=verified
+    ?'These appeared independently in both Qloo taste rankings. Choose one to inspect why.'
+    :'Our two independent Qloo lists did not intersect. Joint suggestions are exploratory, not verified agreement.';
+  $('trust').textContent=verified?'Two-sided ranking':'Exploratory only';
   $('count').textContent=String(plan.overlapCount);
-  $('cards').replaceChildren(...plan.candidates.map(candidateCard));
-  const counter=$('counterfactual');
-  const baseline=plan.comparison||{};
-  const alternatives=[['GROUP A ACTS ALONE',baseline.unmediatedA],['GROUP B ACTS ALONE',baseline.unmediatedB]];
-  counter.hidden=!(baseline.unmediatedA||baseline.unmediatedB);
-  $('counterfactual-rows').replaceChildren(...alternatives.filter((x)=>x[1]).map(([label,option])=>{
-    const block=make('div','counterfactual-block');
-    block.append(make('span','strip-label',label),make('strong','',option.name),
-      make('span','counterfactual-notice',option.acknowledgedByOther?'Also appears in the other group’s Qloo list':'Not found in the other group’s Qloo top list'));
+  $('cards').replaceChildren(...plan.candidates.map(resultRow));
+  $('featured').hidden=!plan.candidates.length;
+  if(plan.candidates.length)selectCandidate(0);
+  const comparison=plan.comparison||{};
+  const baselines=[['IF A PICKED ALONE',comparison.unmediatedA],['IF B PICKED ALONE',comparison.unmediatedB]];
+  $('counterfactual').hidden=!baselines.some(x=>x[1]);
+  $('counterfactual-rows').replaceChildren(...baselines.filter(x=>x[1]).map(([label,value])=>{
+    const block=el('div','counterfactual-block');
+    block.append(el('span','',label),el('strong','',value.name),
+      el('span','counterfactual-notice',value.acknowledgedByOther?'Also appears in the other side’s ranking':'Not in the other side’s Qloo top list'));
     return block;
   }));
   $('explore-section').hidden=!plan.exploratory.length;
-  $('explore-cards').replaceChildren(...plan.exploratory.map((x)=>{
-    const el=make('div','explore-card');
-    el.append(make('strong','',x.name),make('span','', 'Joint Qloo discovery #'+x.discoveryRank));
-    return el;
+  $('explore-cards').replaceChildren(...plan.exploratory.map(x=>{
+    const item=el('div','explore-card');
+    item.append(el('strong','',x.name),el('span','','Joint search rank #'+x.discoveryRank));
+    return item;
   }));
-  const unmatched=[...plan.groupA.unmatched,...plan.groupB.unmatched];
-  const approx=[...(plan.groupA.approximate||[]),...(plan.groupB.approximate||[])];
-  const warningMessages=[];
-  if(unmatched.length)warningMessages.push('Could not match: '+unmatched.join(', ')+'. Results use only resolved seeds.');
-  if(approx.length)warningMessages.push('Approximate Qloo name matches: '+approx.map((x)=>x.input+' → '+x.name).join('; ')+'. Check these names before trusting the plan.');
-  const warnings=$('warnings');warnings.hidden=!warningMessages.length;warnings.textContent=warningMessages.join(' ');
-  const trace=$('trace');
-  trace.replaceChildren(...plan.trace.map((x)=>make('li','',x)));
-  $('methodology').textContent=plan.metadata.explanation;
-  results.scrollIntoView({behavior:'smooth',block:'start'});
-}
-form.addEventListener('submit',async(e)=>{
-  e.preventDefault();button.disabled=true;
-  const label=button.querySelector('span');
-  const old=label.textContent;label.textContent='Mapping the taste graph…';
-  results.setAttribute('aria-busy','true');
-  try {
-    const payload={groupA:$('group-a').value,groupB:$('group-b').value,category:$('category').value,strategy:$('strategy').value};
-    const response=await fetch('/api/plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    let data;try{data=await response.json()}catch{throw new Error('Unexpected response from application server.')}
-    if(!response.ok)throw new Error(data.error||'Unable to complete the Qloo requests.');
-    render(data);
-  }catch(err){latest=null;showError(err.message);}
-  finally{button.disabled=false;label.textContent=old;results.setAttribute('aria-busy','false');}
-});
-fetch('/api/health').then((r)=>r.json()).then((status)=>{
-  const banner=$('api-banner');
-  if(status.qlooConfigured) {
-    banner.classList.add('connected');banner.querySelector('.status-symbol').textContent='●';
-    $('api-message').textContent='Live Qloo integration is configured. Explore real cultural data below.';
-  } else {
-    banner.classList.add('needs-key');banner.querySelector('.status-symbol').textContent='!';
-    $('api-message').textContent='Setup required: add your Qloo event API key to the server to enable live recommendations. No pretend demo data is shown.';
+  const notes=[];
+  for(const group of [plan.groupA,plan.groupB]){
+    if(group.unmatched?.length)notes.push('Not matched: '+group.unmatched.join(', '));
+    if(group.approximate?.length)notes.push('Approximate Qloo titles: '+group.approximate.map(x=>x.input+' → '+x.name).join('; '));
   }
-}).catch(()=>{$('api-message').textContent='Unable to check server health.';});
+  $('warnings').hidden=!notes.length;
+  $('warnings').textContent=notes.join('. ');
+  $('trace').replaceChildren(...plan.trace.map(text=>el('li','',text)));
+  $('methodology').textContent=plan.metadata.explanation;
+}
+async function checkMatches(){
+  const current=updateDraft(); draft=current;preview=null;latest=null;
+  const req=++requestSerial;
+  setLoading('Matching the cultural identities…','Searching Qloo for the actual films, artists and books you named.');
+  $('resolve').disabled=true;
+  try{
+    const data=await post('/api/resolve',current);
+    if(req===requestSerial)renderPreview(data);
+  }catch(error){if(req===requestSerial)showError(error);}
+  finally{$('resolve').disabled=false;}
+}
+async function makePlan(){
+  if(!draft||!preview)return;
+  const req=++requestSerial;
+  const payload={...draft,selections:{groupA:collectSelections('groupA'),groupB:collectSelections('groupB')}};
+  $('generate').disabled=true;
+  setLoading('Tracing the common ground…','Inspecting independent Qloo rankings, then testing the combined taste signal.');
+  try{
+    const plan=await post('/api/plan',payload);
+    if(req===requestSerial)renderPlan(plan);
+  }catch(error){if(req===requestSerial)showError(error);}
+  finally{$('generate').disabled=false;}
+}
+function goBack(){++requestSerial;stage('empty-state');$('group-a').focus();}
+$('bridge-form').addEventListener('submit',event=>{event.preventDefault();checkMatches();});
+$('generate').addEventListener('click',makePlan);
+$('back-to-edit').addEventListener('click',goBack);
+$('retry').addEventListener('click',goBack);
+$('new-brief').addEventListener('click',goBack);
+$('export').addEventListener('click',async()=>{
+  if(!latest)return;
+  try{await navigator.clipboard.writeText(reportText(latest));$('export').textContent='Report copied ✓';}
+  catch{$('export').textContent='Clipboard unavailable';}
+});
+document.querySelectorAll('[data-preset]').forEach(button=>button.addEventListener('click',()=>{
+  const p=presets[button.dataset.preset];
+  $('group-a').value=p.a;$('group-b').value=p.b;$('category').value=p.category;
+  draft=null;preview=null;latest=null;++requestSerial;stage('empty-state');
+}));
+for(const id of ['group-a','group-b','category','strategy']){
+  $(id).addEventListener('change',()=>{if(!$('empty-state').hidden){return;}++requestSerial;preview=null;latest=null;stage('empty-state');});
+}
+fetch('/api/health').then(r=>r.json()).then(data=>{
+  const badge=$('api-banner');
+  badge.classList.add(data.qlooConfigured?'connected':'needs-key');
+  $('api-message').textContent=data.qlooConfigured?'Qloo key present · live access not yet verified':'Qloo key not configured';
+}).catch(()=>{$('api-message').textContent='Qloo connection status unavailable';});

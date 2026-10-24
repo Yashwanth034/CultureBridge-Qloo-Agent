@@ -67,6 +67,24 @@ test('agent autonomously expands full ranked lists when initial searches have no
   assert.deepEqual(calls.map((x)=>x.take),[40,40,40,50,50]);
   assert.ok(result.trace.some((stage)=>stage.includes('expanded Qloo')));
 });
+test('human-in-the-loop preview exposes alternatives and respects a reviewed Qloo UUID',async()=>{
+  const searchLog=[],insightLog=[];
+  const client={
+    async search(name,type){searchLog.push({name,type});return name==='Dune'
+      ? [{id:id(1),name:'Dune',type:'movie'},{id:id(8),name:'Dune (Alternative)',type:'movie'}]
+      : [{id:id(2),name:'Barbie',type:'movie'}];},
+    async insights(type,ids){insightLog.push(ids);return [item(30),item(31)];}
+  };
+  const {previewBridge}=await import('../src/agent.mjs');
+  const input={groupA:'movie: Dune',groupB:'movie: Barbie',category:'movie'};
+  const preview=await previewBridge(input,client);
+  assert.equal(preview.groupA[0].matches.length,2);
+  assert.equal(preview.groupA[0].suggestedId,id(1));
+  const plan=await buildBridge({...input,selections:{groupA:[id(8)],groupB:[id(2)]}},client);
+  assert.equal(plan.groupA.seeds[0].id,id(8));
+  assert.equal(insightLog[0][0],id(8));
+  await assert.rejects(buildBridge({...input,selections:{groupA:[id(99)],groupB:[id(2)]}},client),/no longer valid/);
+});
 test('agent reports exploration-only when there is no agreement',async()=>{
   const client={
     async search(name){return [{id:id(name==='Adele'?1:2),name,type:'artist'}];},

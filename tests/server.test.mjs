@@ -21,7 +21,11 @@ test('served frontend, real API error contract and security headers',async()=>{
     assert.match(await page.text(),/CultureBridge/);
     const css=await fetch(url+'/styles.css');
     assert.equal(css.status,200);
-    assert.match(await css.text(),/candidate/);
+    assert.match(await css.text(),/rank-item/);
+    const webgl=await fetch(url+'/scene.js');
+    assert.equal(webgl.status,200);
+    assert.match(webgl.headers.get('content-type'),/text\/javascript/);
+    assert.match(await webgl.text(),/culturebridge:phase/);
     const favicon=await fetch(url+'/favicon.svg');
     assert.equal(favicon.status,200);
     assert.match(favicon.headers.get('content-type'),/image\/svg\+xml/);
@@ -34,6 +38,20 @@ test('served frontend, real API error contract and security headers',async()=>{
     assert.equal(response.status,503);
     assert.match((await response.json()).error,/not configured/);
   } finally {await new Promise((resolve)=>server.close(resolve));}
+});
+test('HTTP /api/resolve returns selectable Qloo entities without starting insights',async()=>{
+ const log=[];
+ const client={apiKey:'mock',async search(name,type){log.push(['search',name,type]);return [{id:uid(name==='Dune'?1:2),name,type:'movie'}]},async insights(){throw new Error('should not run insights in review phase')}};
+ const {server,url}=await serve(client);
+ try{
+   const res=await fetch(url+'/api/resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({groupA:'movie: Dune',groupB:'movie: Barbie'})});
+   assert.equal(res.status,200);
+   const response=await res.json();
+   assert.equal(response.source,'qloo-live');
+   assert.equal(response.groupA[0].matches[0].name,'Dune');
+   assert.equal(response.groupB[0].matches[0].name,'Barbie');
+   assert.equal(log.length,2);
+ } finally {await new Promise(resolve=>server.close(resolve));}
 });
 test('HTTP /api/plan returns grounded Qloo-shaped output without secrets',async()=>{
   const client={
