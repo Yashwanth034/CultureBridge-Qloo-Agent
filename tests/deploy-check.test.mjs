@@ -53,6 +53,24 @@ test('optional public live Qloo check verifies reviewed IDs and all three catego
   assert.ok(requestLog.every(x=>x.origin==='https://culturebridge.example'));
   assert.deepEqual(requestLog.map(x=>x.path),['/api/resolve','/api/plan','/api/resolve','/api/plan','/api/resolve','/api/plan']);
 });
+test('hosted verifier refuses a 200 response with a wrong-category recommendation',async()=>{
+  const entityId='123e4567-e89b-42d3-a456-426614174000';
+  const fake=async url=>{
+    if(new URL(url).pathname==='/api/resolve'){
+      const row={matches:[{id:entityId,type:'artist'}],suggestedId:entityId};
+      return Response.json({source:'qloo-live',groupA:[row],groupB:[row]});
+    }
+    return Response.json({mode:'qloo-live',category:'artist',
+      state:'grounded-overlap',overlapCount:1,
+      candidates:[{id:entityId,type:'movie',name:'Wrong movie'}],exploratory:[],
+      groupA:{count:1},groupB:{count:1},metadata:{jointStatus:'ok'}});
+  };
+  await assert.rejects(
+    verifyHostedFlow(new URL('https://app.example/'),{
+      fetchImpl:fake,categories:[{category:'artist',groupA:'artist: Daft Punk',groupB:'artist: BTS'}]
+    }),/valid independent live Qloo Insights/
+  );
+});
 test('live preflight rejects unresolved entities, invalid Insights and upstream outages',async()=>{
   const noMatches=async (url,opts)=>Response.json({source:'qloo-live',groupA:[{matches:[]}],groupB:[{matches:[]}]});
   await assert.rejects(verifyHostedFlow(new URL('https://app.example/'),{fetchImpl:noMatches}),/no usable groupA/);

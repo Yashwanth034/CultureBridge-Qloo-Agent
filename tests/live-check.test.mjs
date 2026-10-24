@@ -50,6 +50,14 @@ test('live smoke test rejects partial joint Qloo degradation even when independe
   };
   await assert.rejects(verifyQloo({client}),/joint exploration failed/);
 });
+test('live smoke refuses cross-category picks even if Qloo response is marked live',async()=>{
+  const client={
+    apiKey:'mock-key',
+    async search(name,type){return [{id:id(name==='Daft Punk'?1:2),name,type}]},
+    async insights(type){return [{id:id(10),name:'Wrong-category book',type:'book'}]}
+  };
+  await assert.rejects(verifyQloo({client,category:'artist'}),/outside the requested artist category/);
+});
 test('all-categories verification uses real category-specific taste seeds',async()=>{
   const searched=[],queries=[];
   const ids={'Interstellar':1,'Spirited Away':2,'Daft Punk':3,'BTS':4,'Dune':5,'Pride and Prejudice':6};

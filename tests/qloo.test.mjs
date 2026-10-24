@@ -33,6 +33,23 @@ test('Qloo affinity retains only genuine finite numeric provider values',()=>{
   const rows=extractEntities({results:{entities:values.map(make)}});
   assert.deepEqual(rows.map(x=>x.affinity),[0.42,0.73,0,null,null,null,null,null,null,0.01]);
 });
+test('Qloo Insights refuses wrong category or untyped results despite HTTP 200',async()=>{
+  const incorrect=new QlooClient({apiKey:'stub',minGapMs:0,fetchImpl:async()=>({
+    ok:true,status:200,async json(){return {success:true,results:{entities:[
+      {...entity,types:['urn:entity:book']},
+      {...entity,types:[],type:'urn:entity:artist',entity_id:'123e4567-e89b-42d3-a456-426614174001'}
+    ]}};}
+  })});
+  await assert.rejects(incorrect.insights('movie',[ID]),/outside the requested movie category/);
+  const mixed=new QlooClient({apiKey:'stub',minGapMs:0,fetchImpl:async()=>({
+    ok:true,status:200,async json(){return {success:true,results:{entities:[
+      entity,{...entity,entity_id:'123e4567-e89b-42d3-a456-426614174001',types:['urn:entity:book']}
+    ]}};}
+  })});
+  const picks=await mixed.insights('movie',[ID]);
+  assert.equal(picks.length,1);
+  assert.equal(picks[0].type,'movie');
+});
 test('Qloo requests target event origin, pass server-only key, cache and exclude seeds',async()=>{
   const calls=[];
   const fetchImpl=async (url,opts)=>{calls.push({url:String(url),headers:opts.headers});return {ok:true,status:200,async json(){return {success:true,results:{entities:[entity]}}}};};

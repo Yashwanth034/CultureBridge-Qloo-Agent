@@ -139,6 +139,13 @@ export class QlooClient {
       'filter.type':'urn:entity:' + type, 'signal.interests.entities':ids,
       'filter.exclude.entities':ids, 'feature.explainability':'true', take
     });
-    return extractEntities(payload).filter((x) => !x.type || x.type === type).slice(0, take);
+    // A 200 response does not prove the requested Qloo output category was
+    // honored. Never allow unknown/wrong entity types into ranked results.
+    const entities=extractEntities(payload);
+    const matching=entities.filter(x=>x.type===type);
+    if(entities.length>0 && matching.length===0){
+      throw new QlooError('Qloo returned entities outside the requested '+type+' category. Check the event API response.',502);
+    }
+    return matching.slice(0,take);
   }
 }
