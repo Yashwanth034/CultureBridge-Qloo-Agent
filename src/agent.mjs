@@ -7,7 +7,25 @@ import {QlooError} from './qloo.mjs';
 const TYPES = new Set(['movie','artist','book']);
 export function parseSeeds(text) {
   if (typeof text !== 'string' || text.length > 500) throw new QlooError('Use short preference names.',400);
-  const parts = text.split(/[;,\n]/).map((s)=>s.trim()).filter(Boolean);
+  // A literal comma in a title must not create a bogus extra Qloo lookup.
+  // Double-quoted sections are treated as a single taste; doubled quotes
+  // inside a quoted title represent one literal quote (CSV convention).
+  const parts=[];
+  let part='',quoted=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(ch==='"'){
+      if(quoted && text[i+1]==='"'){part+='"';i++;continue;}
+      quoted=!quoted;
+    }else if(!quoted && (ch===','||ch===';'||ch==='\n')){
+      if(part.trim())parts.push(part.trim());
+      part='';
+    }else{
+      part+=ch;
+    }
+  }
+  if(quoted)throw new QlooError('Close the quotation marks around titles containing commas.',400);
+  if(part.trim())parts.push(part.trim());
   if (parts.length < 1 || parts.length > 3) throw new QlooError('Give 1–3 tastes per group, separated by commas.',400);
   return parts.map((part)=>{
     const match = /^(movie|artist|book)\s*:\s*(.+)$/i.exec(part);

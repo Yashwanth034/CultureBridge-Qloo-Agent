@@ -9,6 +9,19 @@ test('typed and untyped signals are handled',()=>{
   assert.throws(()=>parseSeeds(''),/1–3 tastes/);
   assert.throws(()=>parseSeeds('a, b, c, d'),/1–3 tastes/);
 });
+test('quoted titles keep commas and embedded quotes inside one Qloo seed',()=>{
+  assert.deepEqual(parseSeeds('movie: "I, Tonya", book: "Eat, Pray, Love"'),[
+    {name:'I, Tonya',type:'movie'},{name:'Eat, Pray, Love',type:'book'}
+  ]);
+  assert.deepEqual(parseSeeds('"movie: Love, Simon"; artist: BTS\nbook: Dune'),[
+    {name:'Love, Simon',type:'movie'},{name:'BTS',type:'artist'},{name:'Dune',type:'book'}
+  ]);
+  assert.deepEqual(parseSeeds('book: "He Said ""Hello"""'),[
+    {name:'He Said "Hello"',type:'book'}
+  ]);
+  assert.throws(()=>parseSeeds('movie: "I, Tonya'),/Close the quotation marks/);
+  assert.throws(()=>parseSeeds('movie: "I, Tonya", book: Dune; artist: BTS; movie: Barbie'),/1–3 tastes/);
+});
 test('ranking prioritizes verified overlap rather than one-sided favorites',()=>{
   const a=[item(1),item(2),item(3)],b=[item(2),item(4),item(1)],joint=[item(3),item(2),item(5)];
   const result=reconcile(a,b,joint);

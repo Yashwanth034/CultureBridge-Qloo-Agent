@@ -86,6 +86,26 @@ test('served frontend, real API error contract and security headers',async()=>{
     assert.match((await response.json()).error,/not configured/);
   } finally {await new Promise((resolve)=>server.close(resolve));}
 });
+test('HTTP entity preview submits comma-containing cultural titles intact',async()=>{
+  const names=[];
+  const client={apiKey:'stub',async search(name,type){
+    names.push([name,type]);
+    return [{id:uid(names.length),name,type:type||'movie'}];
+  }};
+  const {server,url}=await serve(client);
+  try{
+    const res=await fetch(url+'/api/resolve',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({groupA:'movie: "I, Tonya", book: "Eat, Pray, Love"',groupB:'movie: Barbie'})
+    });
+    assert.equal(res.status,200);
+    const preview=await res.json();
+    assert.deepEqual(names,[['I, Tonya','movie'],['Eat, Pray, Love','book'],['Barbie','movie']]);
+    assert.equal(preview.groupA.length,2);
+    assert.equal(preview.groupA[0].input,'I, Tonya');
+    assert.equal(preview.groupA[1].input,'Eat, Pray, Love');
+  }finally{await new Promise(resolve=>server.close(resolve));}
+});
 test('HTTP /api/resolve returns selectable Qloo entities without starting insights',async()=>{
  const log=[];
  const client={apiKey:'mock',async search(name,type){log.push(['search',name,type]);return [{id:uid(name==='Dune'?1:2),name,type:'movie'}]},async insights(){throw new Error('should not run insights in review phase')}};
