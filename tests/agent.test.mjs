@@ -174,6 +174,7 @@ test('explicit review exclusions are honored even when Qloo would find a new mat
   assert.equal(plan.groupB.excluded.length,0);
   assert.ok(insights.every(ids=>!ids.includes(id(3))));
   assert.equal(plan.overlapCount,1);
+  assert.equal(plan.metadata.requestedCalls,5); // two approved searches, three Qloo Insights calls
 });
 test('explicitly excluding all matches for one perspective fails instead of inventing a taste',async()=>{
   let calls=0;

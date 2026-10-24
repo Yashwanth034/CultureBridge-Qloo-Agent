@@ -28,6 +28,44 @@ test('Qloo requests target event origin, pass server-only key, cache and exclude
   assert.match(calls[1].url,/filter.exclude.entities/);
   assert.equal(result[0].name,'Dune');
 });
+test('concurrent identical Qloo queries coalesce into one upstream call',async()=>{
+  let unblock;
+  const held=new Promise(resolve=>{unblock=resolve;});
+  let calls=0;
+  const client=new QlooClient({apiKey:'stub',minGapMs:0,
+    fetchImpl:async()=>{calls++;await held;return {ok:true,status:200,async json(){return {success:true,results:{entities:[entity]}};}};}
+  });
+  const first=client.search('Dune','movie');
+  const second=client.search('Dune','movie');
+  const third=client.search('Dune','movie');
+  assert.equal(client.inflight.size,1);
+  unblock();
+  const values=await Promise.all([first,second,third]);
+  assert.equal(calls,1);
+  assert.equal(client.inflight.size,0);
+  assert.deepEqual(values[0],values[2]);
+});
+test('a failed concurrent request rejects all waiters once and can be retried',async()=>{
+  let calls=0;
+  const client=new QlooClient({apiKey:'stub',minGapMs:0,fetchImpl:async()=>{
+    calls++;
+    if(calls===1)throw new Error('network offline');
+    return {ok:true,status:200,async json(){return {success:true,results:{entities:[entity]}};}};
+  }});
+  const errors=await Promise.allSettled([client.search('Dune','movie'),client.search('Dune','movie')]);
+  assert.ok(errors.every(x=>x.status==='rejected'&&/Qloo connection/.test(x.reason.message)));
+  assert.equal(calls,1);
+  assert.equal(client.inflight.size,0);
+  assert.equal((await client.search('Dune','movie')).length,1);
+  assert.equal(calls,2);
+});
+test('missing Qloo names use a short negative cache',async()=>{
+  let calls=0;
+  const client=new QlooClient({apiKey:'stub',minGapMs:0,fetchImpl:async()=>{calls++;return {ok:false,status:404};}});
+  assert.deepEqual(await client.search('Unknown Artist','artist'),[]);
+  assert.deepEqual(await client.search('Unknown Artist','artist'),[]);
+  assert.equal(calls,1);
+});
 test('zero search results from Qloo are not a fatal API error',async()=>{
   const client=new QlooClient({apiKey:'dummy-key',minGapMs:0,fetchImpl:async()=>({ok:false,status:404})});
   assert.deepEqual(await client.search('unfindable band','artist'),[]);

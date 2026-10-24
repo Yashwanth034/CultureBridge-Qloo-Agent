@@ -153,7 +153,10 @@ export async function buildBridge(input,client) {
     metadata:{
       jointStatus,
       warnings:jointStatus==='unavailable'?['The joint Qloo exploration request failed. Independently verified matches remain available; joint-only discoveries and discovery-mode boosting are unavailable.']:[],
-      requestedCalls:sa.length+sb.length+3+(expanded?2:0),
+      // Counts logical Qloo tool operations in this generation step. Explicit
+      // review exclusions have no search operation; transport-level cache hits
+      // and retries are tracked by the Qloo client, not counted here.
+      requestedCalls:a.resolved.length+a.unmatched.length+b.resolved.length+b.unmatched.length+3+(expanded?2:0),
       expandedSearch:expanded,
       explanation:overlap
         ? 'Each common-ground item appears in both independent Qloo rankings. Balanced mode prioritizes the weaker side; discovery mode adds the joint-signal ranking when available. Scores use relative positions, not Qloo affinity or estimated probability.'+(jointStatus==='unavailable'?' The joint signal was unavailable; discovery mode used independent evidence only.':'')

@@ -29,7 +29,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 export class QlooClient {
   constructor({apiKey = process.env.QLOO_API_KEY, fetchImpl = globalThis.fetch, origin = QLOO_ORIGIN, minGapMs = 260} = {}) {
     this.apiKey = apiKey; this.fetchImpl = fetchImpl; this.origin = origin;
-    this.minGapMs = minGapMs; this.cache = new Map(); this.pending = Promise.resolve(); this.nextAt = 0;
+    this.minGapMs = minGapMs; this.cache = new Map(); this.inflight = new Map(); this.pending = Promise.resolve(); this.nextAt = 0;
   }
   async request(path, params) {
     if (!this.apiKey) throw new QlooError('Qloo live key is not configured on the server yet.', 503);
@@ -40,6 +40,10 @@ export class QlooClient {
     const cacheKey = url.toString();
     const cached = this.cache.get(cacheKey);
     if (cached && cached.expires > Date.now()) return cached.data;
+    // Concurrent requests for the same taste share an in-flight upstream call.
+    // This prevents duplicate queue slots and duplicated failed retries.
+    const inProgress=this.inflight.get(cacheKey);
+    if(inProgress)return inProgress;
     const worker = async () => {
       const again = this.cache.get(cacheKey);
       if (again && again.expires > Date.now()) return again.data;
@@ -56,7 +60,12 @@ export class QlooClient {
         }
         if (!res.ok) {
           // Qloo /search explicitly documents HTTP 404 for zero matches.
-          if (path === '/search' && res.status === 404) return {success:true,results:{entities:[]}};
+          if (path === '/search' && res.status === 404) {
+            const empty={success:true,results:{entities:[]}};
+            if(this.cache.size>250)this.cache.clear();
+            this.cache.set(cacheKey,{data:empty,expires:Date.now()+60*1000});
+            return empty;
+          }
           if ([401,403].includes(res.status)) throw new QlooError('Qloo rejected the event credential or this endpoint. Verify the key and event API origin.', 503);
           throw new QlooError('Qloo declined a query (HTTP ' + res.status + ').', 502);
         }
@@ -69,8 +78,10 @@ export class QlooClient {
       }
     };
     const p = this.pending.then(worker, worker);
+    this.inflight.set(cacheKey,p);
     this.pending = p.catch(() => {});
-    return p;
+    try{return await p;}
+    finally{if(this.inflight.get(cacheKey)===p)this.inflight.delete(cacheKey);}
   }
   async search(query, type = null) {
     const term = String(query).trim();
