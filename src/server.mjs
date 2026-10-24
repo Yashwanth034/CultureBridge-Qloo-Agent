@@ -1,4 +1,5 @@
 import {createServer} from 'node:http';
+import {StringDecoder} from 'node:string_decoder';
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
@@ -22,12 +23,19 @@ function allow(ip) {
   if (!item||item.reset<now) {counts.set(ip,{n:1,reset:now+3600000});return true;}
   return ++item.n<=60;
 }
-async function bodyJson(req) {
-  let data='';
+export async function bodyJson(req) {
+  // HTTP streaming may split a UTF-8 character across arbitrary boundaries.
+  // Decode across chunks, and limit actual wire bytes rather than JS UTF-16
+  // characters; both matter for international cultural titles.
+  const decoder=new StringDecoder('utf8');
+  let data='',bytes=0;
   for await (const chunk of req) {
-    data+=chunk.toString('utf8');
-    if (data.length>5000) throw new QlooError('Request body too large.',413);
+    const buffer=Buffer.isBuffer(chunk)?chunk:Buffer.from(chunk);
+    bytes+=buffer.byteLength;
+    if(bytes>5000)throw new QlooError('Request body too large.',413);
+    data+=decoder.write(buffer);
   }
+  data+=decoder.end();
   try {return JSON.parse(data);}catch{throw new QlooError('Request must contain valid JSON.',400);}
 }
 export function createAppServer({client=new QlooClient()}={}) {

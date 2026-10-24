@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {once} from 'node:events';
-import {createAppServer} from '../src/server.mjs';
+import {createAppServer,bodyJson} from '../src/server.mjs';
 import {QlooClient} from '../src/qloo.mjs';
 
 const uid=(n)=>'00000000-0000-4000-8000-'+String(n).padStart(12,'0');
@@ -12,6 +12,19 @@ async function serve(client) {
   await once(server,'listening');
   return {server,url:'http://127.0.0.1:'+server.address().port};
 }
+test('JSON parser preserves international names across split UTF-8 byte boundaries',async()=>{
+  const body={groupA:'movie: Amélie, book: 百年孤独',groupB:'movie: 千と千尋の神隠し, artist: Sigur Rós'};
+  const bytes=Buffer.from(JSON.stringify(body),'utf8');
+  const req={async *[Symbol.asyncIterator](){for(const byte of bytes)yield Buffer.from([byte]);}};
+  assert.deepEqual(await bodyJson(req),body);
+});
+test('JSON parser enforces byte limit, including multi-byte characters',async()=>{
+  const long=Buffer.from(JSON.stringify({groupA:'🍿'.repeat(1300)}),'utf8');
+  const req={async *[Symbol.asyncIterator](){yield long.subarray(0,5000);yield long.subarray(5000);}};
+  await assert.rejects(bodyJson(req),error=>error.status===413&&/too large/i.test(error.message));
+  const bad={async *[Symbol.asyncIterator](){yield Buffer.from('{"bad":');}};
+  await assert.rejects(bodyJson(bad),error=>error.status===400&&/valid JSON/i.test(error.message));
+});
 test('served frontend, real API error contract and security headers',async()=>{
   const {server,url}=await serve(new QlooClient({apiKey:''}));
   try {
