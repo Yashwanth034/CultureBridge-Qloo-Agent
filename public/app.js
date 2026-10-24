@@ -168,6 +168,18 @@ function renderPlan(plan){
     :'Our two independent Qloo lists did not intersect. Joint suggestions are exploratory, not verified agreement.';
   $('trust').textContent=verified?'Two-sided ranking':'Exploratory only';
   $('count').textContent=String(plan.overlapCount);
+  $('no-overlap').hidden=verified;
+  $('shared-results').hidden=!verified;
+  if(!verified){
+    const best=plan.exploratory[0];
+    $('no-overlap-title').textContent=best?best.name:'No shared match in this search';
+    $('no-overlap-copy').textContent=best
+      ?'A Qloo joint-search discovery (#'+best.discoveryRank+'), not a confirmed match in both independent rankings. This is an idea to explore together, not proof of agreement.'
+      :'Qloo did not return an independently shared or joint exploratory pick. Try different favorites or a different category; we won’t invent a recommendation.';
+    const next={movie:'artist',artist:'book',book:'movie'}[plan.category];
+    $('try-category').dataset.category=next;
+    $('try-category').firstChild.textContent={movie:'Try movies ',artist:'Try music ',book:'Try books '}[next];
+  }
   $('cards').replaceChildren(...plan.candidates.map(resultRow));
   $('featured').hidden=!plan.candidates.length;
   if(plan.candidates.length)selectCandidate(0);
@@ -225,6 +237,14 @@ $('generate').addEventListener('click',makePlan);
 $('back-to-edit').addEventListener('click',goBack);
 $('retry').addEventListener('click',goBack);
 $('new-brief').addEventListener('click',goBack);
+$('refine-seeds').addEventListener('click',goBack);
+$('try-category').addEventListener('click',()=>{
+  const next=$('try-category').dataset.category;
+  if(!['movie','artist','book'].includes(next))return;
+  $('category').value=next;
+  goBack();
+  $('category').focus();
+});
 $('export').addEventListener('click',async()=>{
   if(!latest)return;
   try{await navigator.clipboard.writeText(reportText(latest));$('export').textContent='Report copied ✓';}

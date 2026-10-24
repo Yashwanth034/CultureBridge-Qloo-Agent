@@ -33,6 +33,17 @@ test('no overlap never produces counterfeit consensus',()=>{
   assert.equal(result.agreement.length,0);
   assert.equal(result.exploratory[0].commonGround,false);
 });
+test('duplicate Qloo IDs retain their best independent and joint ranks',()=>{
+  const a=[item(1),item(2),item(1)],b=[item(2),item(1),item(2)],joint=[item(1),item(2),item(1)];
+  const outcome=reconcile(a,b,joint);
+  const one=outcome.agreement.find(x=>x.id===id(1));
+  const two=outcome.agreement.find(x=>x.id===id(2));
+  assert.equal(outcome.overlapCount,2);
+  assert.equal(one.groupARank,1);
+  assert.equal(one.discoveryRank,1);
+  assert.equal(two.groupBRank,1);
+  assert.equal(two.discoveryRank,2);
+});
 test('agent resolves identities and makes independent and joint probes',async()=>{
   const calls=[];
   const client={

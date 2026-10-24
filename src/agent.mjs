@@ -19,9 +19,15 @@ export function parseSeeds(text) {
 const relativeRank = (rank,total) => rank < 0 ? 0 : Math.round((1-rank/Math.max(total,1))*100);
 export function reconcile(a,b,joint,max=6,strategy='balanced') {
   if (!['balanced','discovery'].includes(strategy)) throw new QlooError('Unknown mediation strategy.',400);
-  const mapA = new Map(a.map((item,i)=>[item.id,{item,rank:i}]));
-  const mapB = new Map(b.map((item,i)=>[item.id,{item,rank:i}]));
-  const mapJ = new Map(joint.map((item,i)=>[item.id,{item,rank:i}]));
+  // Qloo may occasionally surface a repeated entity ID within a result set.
+  // Keep its first (best) rank, rather than allowing a later duplicate to
+  // downgrade a recommendation's evidence.
+  const firstRanks=(items)=>{
+    const map=new Map();
+    items.forEach((item,i)=>{if(!map.has(item.id))map.set(item.id,{item,rank:i});});
+    return map;
+  };
+  const mapA=firstRanks(a),mapB=firstRanks(b),mapJ=firstRanks(joint);
   const rows = [...new Set([...mapA.keys(),...mapB.keys(),...mapJ.keys()])].map((id)=>{
     const left=mapA.get(id),right=mapB.get(id),bridge=mapJ.get(id);
     const pa=relativeRank(left?left.rank:-1,a.length),pb=relativeRank(right?right.rank:-1,b.length);

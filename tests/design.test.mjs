@@ -10,7 +10,8 @@ test('real two-stage app retains all form, review and results controls',async()=
   for(const id of ['bridge-form','group-a','group-b','category','strategy','resolve','match-review','review-a','review-b','generate',
     'empty-state','loading-state','results','result-title','result-subtitle','cards','explore-section','explore-cards',
     'warnings','trace','methodology','api-banner','api-message','export','featured','featured-bars',
-    'counterfactual','counterfactual-rows','trust','count','error-state','retry','back-to-edit','new-brief']) {
+    'counterfactual','counterfactual-rows','trust','count','error-state','retry','back-to-edit','new-brief',
+    'no-overlap','no-overlap-title','no-overlap-copy','try-category','refine-seeds','shared-results']) {
     assert.match(html,new RegExp('id="'+id+'"'),'Missing '+id);
   }
   for(const value of ['value="movie"','value="artist"','value="book"','value="balanced"','value="discovery"']) assert.ok(html.includes(value));

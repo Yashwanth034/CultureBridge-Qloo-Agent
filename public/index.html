@@ -96,7 +96,13 @@
           <div class="results-header"><div><span class="mini-label">STEP TWO — THE REVEAL</span><h3 id="result-title">Your shared discoveries.</h3><p id="result-subtitle"></p></div><button type="button" id="export" class="export-button">Copy evidence report <span aria-hidden="true">↗</span></button></div>
           <div class="summary-strip"><div><span class="strip-label">CONFIDENCE TYPE</span><strong id="trust">—</strong></div><div><span class="strip-label">COMMON-GROUND PICKS</span><strong id="count">—</strong></div><div><span class="strip-label">SOURCE</span><strong>Qloo / Live</strong></div></div>
           <div id="warnings" class="inline-warning" hidden role="alert"></div>
-          <div class="result-layout">
+          <div id="no-overlap" class="no-overlap" hidden>
+            <div class="no-overlap-label"><span aria-hidden="true">✳</span> THERE'S STILL SOMETHING TO DISCOVER</div>
+            <h4 id="no-overlap-title">Different worlds. A new possibility.</h4>
+            <p id="no-overlap-copy">No recommendation was independently ranked for both groups. We won't invent agreement.</p>
+            <div class="no-overlap-actions"><button type="button" id="try-category" class="no-overlap-action">Try a different category <span aria-hidden="true">↗</span></button><button type="button" id="refine-seeds" class="no-overlap-secondary">Change the tastes →</button></div>
+          </div>
+          <div id="shared-results" class="result-layout">
             <div class="ranked-area"><h4>THE SHARED SHORTLIST <span>SELECT A PICK ↗</span></h4><div class="ranked-list" id="cards"></div></div>
             <div id="featured" class="featured" hidden><div class="featured-head"><span class="mini-label">INSIDE THE MATCH</span><span class="featured-mark" aria-hidden="true">✳</span></div><h4 id="featured-title"></h4><p id="featured-evidence"></p><div id="featured-bars" class="featured-bars"></div><p class="heuristic-note">The balance score compares relative Qloo list positions. It is not an affinity percentage or a prediction.</p></div>
           </div>
