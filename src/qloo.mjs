@@ -53,9 +53,23 @@ export class QlooClient {
         this.nextAt = Date.now() + this.minGapMs;
         let res;
         try { res = await this.fetchImpl(url, {headers: {'X-Api-Key': this.apiKey, Accept: 'application/json'}, signal: AbortSignal.timeout(9500)}); }
-        catch { throw new QlooError('Qloo connection timed out or was unavailable. Try again.'); }
+        catch {
+          // Transient network resets happen during hosting-provider routing
+          // changes. Retry a bounded number of times, but never expose the
+          // transport exception or API key to the browser.
+          if(attempt<2){await sleep(500*(attempt+1));continue;}
+          throw new QlooError('Qloo connection timed out or was unavailable. Try again.',503);
+        }
         if (res.status === 429 || res.status >= 500) {
-          if (attempt < 2) { await sleep(800 * (attempt + 1)); continue; }
+          if (attempt < 2) {
+            // Honor a short Retry-After for 429s if supplied. Cap the wait to
+            // avoid a single slow request blocking the entire shared queue.
+            const retryHeader=res.status===429?res.headers?.get?.('retry-after'):null;
+            const seconds=typeof retryHeader==='string' && /^\d+(?:\.\d+)?$/.test(retryHeader.trim())?Number(retryHeader):null;
+            const waitMs=Number.isFinite(seconds)?Math.min(5000,Math.max(0,seconds*1000)):800*(attempt+1);
+            await sleep(waitMs);
+            continue;
+          }
           throw new QlooError('Qloo is rate limiting or temporarily unavailable.', 503);
         }
         if (!res.ok) {

@@ -49,13 +49,33 @@ test('a failed concurrent request rejects all waiters once and can be retried',a
   let calls=0;
   const client=new QlooClient({apiKey:'stub',minGapMs:0,fetchImpl:async()=>{
     calls++;
-    if(calls===1)throw new Error('network offline');
+    if(calls<=3)throw new Error('network offline');
     return {ok:true,status:200,async json(){return {success:true,results:{entities:[entity]}};}};
   }});
   const errors=await Promise.allSettled([client.search('Dune','movie'),client.search('Dune','movie')]);
   assert.ok(errors.every(x=>x.status==='rejected'&&/Qloo connection/.test(x.reason.message)));
-  assert.equal(calls,1);
+  assert.equal(calls,3);
   assert.equal(client.inflight.size,0);
+  assert.equal((await client.search('Dune','movie')).length,1);
+  assert.equal(calls,4);
+});
+test('transient network reset recovers without retrying bad credentials',async()=>{
+  let calls=0;
+  const client=new QlooClient({apiKey:'stub',minGapMs:0,fetchImpl:async()=>{
+    calls++;
+    if(calls===1)throw new Error('ECONNRESET');
+    return {ok:true,status:200,async json(){return {success:true,results:{entities:[entity]}};}};
+  }});
+  assert.equal((await client.search('Dune','movie')).length,1);
+  assert.equal(calls,2);
+});
+test('429 Retry-After is honored and capped while request eventually succeeds',async()=>{
+  let calls=0;
+  const client=new QlooClient({apiKey:'stub',minGapMs:0,fetchImpl:async()=>{
+    calls++;
+    if(calls===1)return {ok:false,status:429,headers:{get:()=> '0'}};
+    return {ok:true,status:200,async json(){return {success:true,results:{entities:[entity]}};}};
+  }});
   assert.equal((await client.search('Dune','movie')).length,1);
   assert.equal(calls,2);
 });

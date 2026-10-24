@@ -32,7 +32,18 @@ function stage(name) {
 }
 function updateDraft(){return {groupA:$('group-a').value,groupB:$('group-b').value,category:$('category').value,strategy:$('strategy').value};}
 async function post(path,payload){
-  const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  let response;
+  try{
+    response=await fetch(path,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload),signal:AbortSignal.timeout(90000)
+    });
+  }catch(error){
+    if(error?.name==='TimeoutError'||error?.name==='AbortError'){
+      throw new Error('The cultural search is taking too long. Please retry; Qloo may be busy.');
+    }
+    throw new Error('Could not reach the CultureBridge server. Please check your connection and retry.');
+  }
   let data;
   try{data=await response.json();}catch{throw new Error('The server returned an unreadable response.');}
   if(!response.ok)throw new Error(data.error||'Unable to complete the request.');

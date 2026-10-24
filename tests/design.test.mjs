@@ -50,6 +50,8 @@ test('app loads local behavior with no inline script or unsafe HTML',async()=>{
   assert.match(js,/Raw affinity values are provided by Qloo/);
   assert.match(js,/dataset\.liveVerified/);
   assert.match(js,/Qloo live recommendations received/);
+  assert.match(js,/AbortSignal\.timeout\(90000\)/);
+  assert.match(js,/cultural search is taking too long/);
   assert.match(js,/culturebridge:phase/);
   assert.match(js,/culturebridge:selection/);
   const scene=await source('public/scene.js');
