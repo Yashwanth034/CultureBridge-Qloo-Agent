@@ -55,7 +55,7 @@ export function createAppServer({client=new QlooClient()}={}) {
         const [name,contentType]=staticFiles.get(pathname);
         const contents=await readFile(join(root,name));
         res.writeHead(200,{'Content-Type':contentType,'X-Content-Type-Options':'nosniff','X-Frame-Options':'DENY',
-          'Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+          'Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
           'Cache-Control':'public, max-age=60'});
         return res.end(contents);
       }
