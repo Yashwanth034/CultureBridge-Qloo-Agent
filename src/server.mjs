@@ -36,7 +36,15 @@ export function createAppServer({client=new QlooClient()}={}) {
       const url=new URL(req.url||'/', 'http://localhost');
       const pathname=url.pathname;
       if (req.method==='GET'&&pathname==='/api/health') {
+        // Liveness: the Node process is listening. Do not mistake this for an
+        // upstream Qloo authentication or integration check.
         return send(res,200,{status:'ok',qlooConfigured:Boolean(client.apiKey),mode:'live-only'});
+      }
+      if (req.method==='GET'&&pathname==='/api/readiness') {
+        // Deployment readiness is deliberately stricter than process liveness.
+        // A key being set is necessary but does not prove Qloo will accept it.
+        const configured=Boolean(client.apiKey && String(client.apiKey).trim());
+        return send(res,configured?200:503,{status:configured?'ready':'configuration_required',qlooConfigured:configured,liveQlooVerified:false});
       }
       if (req.method==='POST'&&(pathname==='/api/plan'||pathname==='/api/resolve')) {
         const origin=req.headers.origin;

@@ -31,6 +31,9 @@ test('served frontend, real API error contract and security headers',async()=>{
     assert.match(favicon.headers.get('content-type'),/image\/svg\+xml/);
     const health=await (await fetch(url+'/api/health')).json();
     assert.equal(health.qlooConfigured,false);
+    const readiness=await fetch(url+'/api/readiness');
+    assert.equal(readiness.status,503);
+    assert.deepEqual(await readiness.json(),{status:'configuration_required',qlooConfigured:false,liveQlooVerified:false});
     const response=await fetch(url+'/api/plan',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({groupA:'movie: Dune',groupB:'movie: Barbie',category:'movie'})
@@ -61,6 +64,9 @@ test('HTTP /api/plan returns grounded Qloo-shaped output without secrets',async(
   };
   const {server,url}=await serve(client);
   try {
+    const readiness=await fetch(url+'/api/readiness');
+    assert.equal(readiness.status,200);
+    assert.equal((await readiness.json()).liveQlooVerified,false);
     const res=await fetch(url+'/api/plan',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({groupA:'movie: Dune',groupB:'movie: Barbie',category:'movie'})

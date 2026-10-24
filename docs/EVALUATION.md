@@ -25,7 +25,7 @@ All four are equally weighted. The judges decide. There is no defensible externa
 
 ## Present local verification
 
-- 21 automated tests passed on Node 20 on October 24, 2026, including HTTP server security headers, basic UI file delivery, response contract, mocked Qloo calls, caching, missing credentials, bad IDs, the 404 no-result search case, two strategies, no-overlap honesty, and genuine two-list agreement sorting.
+- 26 automated tests passed on Node 20 on October 24, 2026, including HTTP server security headers, basic UI file delivery, response contract, mocked Qloo calls, caching, missing credentials, bad IDs, the 404 no-result search case, two strategies, no-overlap honesty, and genuine two-list agreement sorting.
 - JS syntax validation: passed.
 - Browser: the new immersive web interface, live Three.js render, Qloo identity-review stage, and results were inspected in Chrome. An independent **mock-only** local server supplied test entities and rankings during interaction checks. This does not verify real Qloo. The real server correctly reports that no event key is configured.
 - Public GitHub code repository has been created.
@@ -36,7 +36,7 @@ All four are equally weighted. The judges decide. There is no defensible externa
 After obtaining your key via Qloo's event Google Form:
 
 1. Set `QLOO_API_KEY` in your secure server environment; never paste the key into Devpost, GitHub, or public browser JavaScript.
-2. Check `GET /api/health`: `qlooConfigured: true` proves only a key was supplied.
+2. Check `GET /api/readiness`: HTTP 200 and `qlooConfigured:true` prove only a key was supplied. HTTP 503 means the hosted instance is not configured. Run `npm run verify:qloo` (then `-- artist` and `-- book`) on the real-key environment before promising the demo works.
 3. Run 3 scenario briefs on the public host, at least one each: movie, artist, book.
 4. Confirm `GET /search` returns valid UUIDs, categories map correctly, and typed input selects the intended entity.
 5. Confirm `GET /v2/insights` returns usable entities for both independent sides and for the joint query, that results vary with input, and that the app completes in a reasonable time.
@@ -49,6 +49,8 @@ After obtaining your key via Qloo's event Google Form:
 - [x] Public source repository prepared; project pushed to GitHub.
 - [x] User-facing web application and safe server in place.
 - [x] Initial automated local tests and browser visual smoke test passed.
+- [x] Deployment readiness endpoint and Render health check configured.
+- [x] Live Qloo and public URL verification scripts tested with mocks, but not yet against an event key or public deployment.
 - [ ] Qloo event key configured and **real** end-to-end response verified.
 - [ ] Public app deployed and accessed anonymously, end to end.
 - [ ] Final live environment tested for all three categories and strategies.

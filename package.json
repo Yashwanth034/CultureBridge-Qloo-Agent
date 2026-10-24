@@ -9,6 +9,8 @@
     "start": "node src/server.mjs",
     "dev": "node --watch src/server.mjs",
     "test": "node --test tests/*.test.mjs",
-    "check": "node --check src/server.mjs && node --check src/agent.mjs && node --check src/qloo.mjs && node --check public/app.js && node --check public/scene.js"
+    "check": "node --check src/server.mjs && node --check src/agent.mjs && node --check src/qloo.mjs && node --check public/app.js && node --check public/scene.js && node --check scripts/verify-qloo.mjs && node --check scripts/verify-deployment.mjs",
+    "verify:qloo": "node scripts/verify-qloo.mjs",
+    "verify:deploy": "node scripts/verify-deployment.mjs"
   }
 }

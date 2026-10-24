@@ -26,7 +26,7 @@ Without Qloo, there are no entity IDs or independent cross-domain taste rankings
 
 ## Requirements
 
-- Node.js 20 or later (zero third-party dependencies).
+- Node.js 20 or later (zero third-party **server-side** npm dependencies; optional Three.js is served from a version-pinned CDN with a CSS fallback).
 - A Qloo **hackathon event API key** from the [Qloo API key form](https://docs.qloo.com/reference/qloo-llm-hackathon-developer-guide#getting-your-api-key).
 - The event key works **only** with `https://hackathon.api.qloo.com`. The backend supplies `X-Api-Key`. Never put the key into HTML, git or frontend configuration.
 
@@ -48,13 +48,33 @@ node --check src/server.mjs
 node --check src/agent.mjs
 node --check src/qloo.mjs
 node --check public/app.js
+npm run check
+npm test
 ```
+
+After you receive and configure your **private** Qloo event key, check the real external API with:
+
+```bash
+npm run verify:qloo
+npm run verify:qloo -- artist
+npm run verify:qloo -- book
+```
+
+Each verification makes actual upstream `/search` and `/v2/insights` requests using a two-person taste brief. It fails if the key is absent, either input cannot be resolved or the two independent insights results are empty. It reports no credential. **This command has not passed against a real key in this environment.**
 
 `npm test` and `npm run check` are equivalent when npm is available. The test suite uses deterministic Qloo-shaped **mocks**, not live API data. Do not represent these as a real integration test.
 
 ## Deploy a public website
 
-A `render.yaml` is provided for a Node web service on Render. Publish this repository as **public** on GitHub, connect it to your Render account, and set secret `QLOO_API_KEY` in Render's private environment settings. Deploy and verify `https://YOUR-HOST/api/health` reports `"qlooConfigured":true`, then run a **real browser plan**. `true` only means a key is present, not that Qloo accepted it.
+A `render.yaml` is provided for a Node web service on Render. Publish this repository as **public** on GitHub, connect it to your Render account, and set secret `QLOO_API_KEY` in Render's private environment settings. Deploy, then check the public site in one command:
+
+```bash
+npm run verify:deploy -- https://YOUR-HOST.onrender.com
+```
+
+This checks actual HTTP responses, assets, app identity, security headers and secret presence. It does **not** call Qloo. You must still run the live smoke test and interact with the public app.
+
+Also check `https://YOUR-HOST/api/readiness` returns HTTP 200 and `qlooConfigured:true`, and run real plans in a private browsing window. `/api/readiness` returns HTTP 503 when the key is missing, so the host should not claim an unconfigured deployment is healthy. A ready status means **only that a key is present**, not that the remote Qloo service accepted it: first run `npm run verify:qloo` and verify the public browser flow end to end.
 
 Alternatively any Node.js hosting provider supporting server-side environment variables and publicly accessible HTTP on the `PORT` variable will work.
 
@@ -62,10 +82,12 @@ Alternatively any Node.js hosting provider supporting server-side environment va
 
 ## API routes
 
-- `GET /api/health`: basic service health and key presence, not authentication verification.
+- `GET /api/health`: always-200 process liveness (key presence also shown), **not** authentication verification.
+- `GET /api/readiness`: 503 until `QLOO_API_KEY` is configured. It never claims a successful live Qloo test.
+- `POST /api/resolve`: JSON body with `groupA` and `groupB`; returns up to five Qloo entity choices per input for a human to confirm.
 - `POST /api/plan`: JSON `{"groupA":"movie: Interstellar, artist: Daft Punk","groupB":"movie: Spirited Away, artist: BTS","category":"movie"}`.
 
-The backend enforces bounded inputs, no cross-origin form submissions, a conservative request rate cap, short outbound timeouts, backoff for 429/5xx, and a 10-minute in-memory Qloo response cache. No passwords, user accounts or profile persistence are required.
+The backend enforces bounded inputs, no cross-origin form submissions, a conservative request rate cap, short outbound timeouts, backoff for 429/5xx, and a 10-minute in-memory Qloo response cache. The server's readiness check does not send upstream calls, to avoid consuming Qloo quota or leaking status details during frequent host health probes. No passwords, user accounts or profile persistence are required.
 
 ## Known limitations (don't overclaim)
 

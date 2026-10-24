@@ -64,19 +64,21 @@ https://github.com/Yashwanth034/CultureBridge-Qloo-Agent
 ## Test instructions for judges
 
 1. Open the public app and verify the Qloo connection banner is green.
-2. Click "Movie night", then "Find the common ground".
-3. Inspect results with independent Qloo rankings for each profile.
-4. Try "Opposite playlists" with artists, or "Book club" with books.
-5. Expand "Agent decision trail" to view the agent steps and provenance.
-6. Change one taste seed and regenerate to see live taste differences.
-7. Export the evidence report. If no independent match appears, the app correctly labels joint-only suggestions exploratory.
+2. Click "Movie night", then "Find our connection".
+3. Review Qloo's resolved identities for each person's tastes; choose the correct match when Qloo shows multiple options.
+4. Click "Reveal our shared discoveries" to run the independent and joint live Qloo insights requests.
+5. Inspect a result in the shared shortlist to compare the evidence from both perspectives.
+6. Try "Different playlists" with artists, or "Book club" with books.
+7. Expand the agent's reasoning section to examine the decision trail.
+8. Change one taste seed and regenerate to see live taste differences.
+9. Export the evidence report. If no independent match appears, the app correctly labels joint-only suggestions exploratory.
 
 ## Before pressing Submit — required checklist
 
 - [ ] Confirm eligible country, adulthood, and participation rules
 - [ ] Request event key from official Qloo hackathon form; put it in server secret manager, never in repository
-- [ ] Verify real Qloo requests (search and insights) end-to-end, correct API status and response structure
-- [ ] Public website runs correctly for an anonymous judge (no password, no localhost)
+- [ ] Verify real Qloo requests (search and insights) with `npm run verify:qloo` and actual private event key, correct status and response structure
+- [ ] Public website runs correctly for an anonymous judge (no password, no localhost); run `npm run verify:deploy -- https://YOUR-HOST.onrender.com`
 - [x] Repository is public and has README, all source, and MIT LICENSE committed. Check that GitHub detects the license in the repository About area.
 - [ ] Test responsive UI, bad inputs, and the three output categories on published site
 - [ ] Check public demo/source URLs in an incognito session
