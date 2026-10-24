@@ -7,7 +7,7 @@ const presets={
   music:{a:'artist: Radiohead, movie: Dune',b:'artist: Taylor Swift, movie: Barbie',category:'artist'},
   books:{a:'book: Dune, movie: Arrival',b:'book: Pride and Prejudice, artist: Adele',category:'book'}
 };
-let draft=null, preview=null, latest=null, selectedIndex=0, requestSerial=0;
+let draft=null, preview=null, latest=null, selectedIndex=0, requestSerial=0, activeController=null;
 const el=(tag,className,text)=>{
   const item=document.createElement(tag);
   if(className)item.className=className;
@@ -31,12 +31,12 @@ function stage(name) {
   }
 }
 function updateDraft(){return {groupA:$('group-a').value,groupB:$('group-b').value,category:$('category').value,strategy:$('strategy').value};}
-async function post(path,payload){
+async function post(path,payload,controller){
   let response;
   try{
     response=await fetch(path,{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(payload),signal:AbortSignal.timeout(90000)
+      body:JSON.stringify(payload),signal:AbortSignal.any([controller.signal,AbortSignal.timeout(90000)])
     });
   }catch(error){
     if(error?.name==='TimeoutError'||error?.name==='AbortError'){
@@ -252,30 +252,40 @@ function renderPlan(plan){
 }
 async function checkMatches(){
   const current=updateDraft(); draft=current;preview=null;latest=null;
+  activeController?.abort();
+  const controller=new AbortController();activeController=controller;
   const req=++requestSerial;
   setLoading('Matching the cultural identities…','Searching Qloo for the actual films, artists and books you named.');
   $('resolve').disabled=true;
   try{
-    const data=await post('/api/resolve',current);
+    const data=await post('/api/resolve',current,controller);
     if(req===requestSerial)renderPreview(data);
   }catch(error){if(req===requestSerial)showError(error);}
-  finally{$('resolve').disabled=false;}
+  finally{if(activeController===controller){activeController=null;$('resolve').disabled=false;}}
 }
 async function makePlan(){
   if(!draft||!preview)return;
+  activeController?.abort();
+  const controller=new AbortController();activeController=controller;
   const req=++requestSerial;
   const payload={...draft,selections:{groupA:collectSelections('groupA'),groupB:collectSelections('groupB')}};
   $('generate').disabled=true;
   setLoading('Tracing the common ground…','Inspecting independent Qloo rankings, then testing the combined taste signal.');
   try{
-    const plan=await post('/api/plan',payload);
+    const plan=await post('/api/plan',payload,controller);
     if(req===requestSerial)renderPlan(plan);
   }catch(error){if(req===requestSerial)showError(error);}
-  finally{$('generate').disabled=false;}
+  finally{if(activeController===controller){activeController=null;$('generate').disabled=false;}}
 }
-function goBack(){++requestSerial;stage('empty-state');$('group-a').focus();}
+function cancelPending(){
+  activeController?.abort();activeController=null;++requestSerial;
+  $('resolve').disabled=false;
+  $('generate').disabled=false;
+}
+function goBack(){cancelPending();stage('empty-state');$('group-a').focus();}
 $('bridge-form').addEventListener('submit',event=>{event.preventDefault();checkMatches();});
 $('generate').addEventListener('click',makePlan);
+$('cancel-request').addEventListener('click',goBack);
 $('review-a').addEventListener('change',updateReviewEligibility);
 $('review-b').addEventListener('change',updateReviewEligibility);
 $('back-to-edit').addEventListener('click',goBack);
@@ -297,10 +307,11 @@ $('export').addEventListener('click',async()=>{
 document.querySelectorAll('[data-preset]').forEach(button=>button.addEventListener('click',()=>{
   const p=presets[button.dataset.preset];
   $('group-a').value=p.a;$('group-b').value=p.b;$('category').value=p.category;
-  draft=null;preview=null;latest=null;++requestSerial;stage('empty-state');
+  cancelPending();
+  draft=null;preview=null;latest=null;stage('empty-state');
 }));
 for(const id of ['group-a','group-b','category','strategy']){
-  $(id).addEventListener('change',()=>{if(!$('empty-state').hidden){return;}++requestSerial;preview=null;latest=null;stage('empty-state');});
+  $(id).addEventListener('change',()=>{if(!$('empty-state').hidden){return;}cancelPending();preview=null;latest=null;stage('empty-state');});
 }
 fetch('/api/health').then(r=>r.json()).then(data=>{
   const badge=$('api-banner');

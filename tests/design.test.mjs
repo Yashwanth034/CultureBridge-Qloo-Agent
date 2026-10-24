@@ -11,7 +11,7 @@ test('real two-stage app retains all form, review and results controls',async()=
     'empty-state','loading-state','results','result-title','result-subtitle','cards','explore-section','explore-cards',
     'warnings','trace','methodology','api-banner','api-message','export','featured','featured-bars',
     'counterfactual','counterfactual-rows','trust','count','error-state','retry','back-to-edit','new-brief',
-    'no-overlap','no-overlap-title','no-overlap-copy','try-category','refine-seeds','shared-results','featured-anchors','featured-affinities']) {
+    'no-overlap','no-overlap-title','no-overlap-copy','try-category','refine-seeds','shared-results','featured-anchors','featured-affinities','cancel-request']) {
     assert.match(html,new RegExp('id="'+id+'"'),'Missing '+id);
   }
   for(const value of ['value="movie"','value="artist"','value="book"','value="balanced"','value="discovery"']) assert.ok(html.includes(value));
@@ -51,6 +51,9 @@ test('app loads local behavior with no inline script or unsafe HTML',async()=>{
   assert.match(js,/dataset\.liveVerified/);
   assert.match(js,/Qloo live recommendations received/);
   assert.match(js,/AbortSignal\.timeout\(90000\)/);
+  assert.match(js,/AbortSignal\.any\(/);
+  assert.match(js,/activeController\?\.abort\(\)/);
+  assert.match(js,/\$\('cancel-request'\)\.addEventListener\('click',goBack\)/);
   assert.match(js,/cultural search is taking too long/);
   assert.match(js,/culturebridge:phase/);
   assert.match(js,/culturebridge:selection/);
