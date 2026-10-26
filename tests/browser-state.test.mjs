@@ -50,6 +50,14 @@ function makeHarness(){
 }
 const badResponse={ok:false,json:async()=>({error:'Temporary failure'})};
 
+test('idle status never claims Qloo is ready when a key is missing',async()=>{
+  const {get,flush}=makeHarness();
+  await flush();
+  assert.match(get('phase-indicator').textContent,/key|setup/i);
+  get('bridge-form').events.get('submit')({preventDefault(){}});
+  get('cancel-request').events.get('click')();
+  assert.match(get('phase-indicator').textContent,/key|setup/i);
+});
 test('hero jump opens the existing taste studio and focuses the first input',()=>{
   const {get}=makeHarness();
   let scrolled=false,focused=false;

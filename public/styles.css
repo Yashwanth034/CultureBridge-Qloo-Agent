@@ -20,3 +20,92 @@
 @media(max-width:620px){.topbar{height:66px;padding:0 14px}.brand-name{font-size:18px}.brand-symbol{width:33px;height:33px;font-size:23px}.connection{max-width:123px;font-size:10px;line-height:1.35}.about-link{display:none}.app-main{padding:0 12px}.intro-band{padding:29px 3px 25px;flex-direction:column;gap:16px;align-items:start}.overline{font-size:10px;gap:8px;letter-spacing:.7px}.intro-band h1{font-size:clamp(37px,9vw,54px);letter-spacing:-2.9px}.intro-band h1 em{letter-spacing:-2.9px}.intro-side{font-size:14px;max-width:95%;line-height:1.5}.intro-aside{max-width:100%;gap:12px}.intro-cta{min-height:44px;font-size:14px}.taste-lab{border-radius:17px}.lab-head{padding:15px 16px;font-size:11px}.lab-step{font-size:18px}.lab-status{font-size:10px;max-width:120px;text-align:right}.lab-form{display:flex;flex-direction:column}.taste-stage{order:2;min-height:180px}.profile{order:0;margin:6px 15px 15px;padding:21px}.profile-a,.profile-b{margin-left:15px;margin-right:15px}.profile-b{order:1}.profile-copy{margin:18px 0}.profile-copy h2{font-size:22px}.profile textarea{min-height:89px}.lab-controls{order:3;display:grid;grid-template-columns:1fr;margin:6px 15px 0;gap:20px;padding:22px 0 16px}.lab-controls>.primary-action{grid-column:1;max-width:none}.privacy-note{order:4;padding:0 15px 19px;font-size:12px}.orbit-label{font-size:10px}.output{padding-inline:15px}.output-head{align-items:start;flex-direction:column}.output-head h2{font-size:30px}.match-review,.results{padding:19px 15px}.review-columns{grid-template-columns:1fr}.review-intro p,.results-header p{font-size:15px}.review-entry select{font-size:15px}.review-actions{flex-direction:column;align-items:stretch;gap:5px}.review-actions .primary-action{width:100%;min-width:0}.results-header{flex-direction:column;align-items:start}.summary-strip{grid-template-columns:1fr 1fr}.summary-strip>div:last-child{grid-column:1/-1;border-right:0;border-top:1px solid var(--line);margin-top:12px;padding-top:17px}.summary-strip strong{font-size:16px}.rank-item{grid-template-columns:25px 1fr 34px 17px;gap:8px;padding:12px}.rank-name{font-size:16px}.rank-sub{font-size:12px}.featured{padding:20px}.counterfactual-rows,.explore-grid{grid-template-columns:1fr}.how-section{display:flex;flex-direction:column;align-items:start;padding:69px 2px 53px;gap:18px}.how-section h2{font-size:37px}.app-footer{flex-direction:column;align-items:start;gap:16px}.app-footer>div{flex-wrap:wrap;gap:13px}.stage-kicker{font-size:9px}}
 .match-review:not([hidden]),.results:not([hidden]),.error-state:not([hidden]){animation:discover-in .48s cubic-bezier(.18,.8,.22,1) both}@keyframes discover-in{from{opacity:0;transform:translateY(18px) scale(.99);filter:blur(6px)}to{opacity:1;transform:none;filter:blur(0)}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation:none!important;transition:none!important}.scene-visual canvas{transition:none!important}}
+
+/* Release UX pass — focus on the two inputs, one decision, and clear evidence. */
+.topbar{height:72px}
+.top-actions{gap:24px}
+.about-link{font-size:14px;font-weight:650;letter-spacing:0;color:#d8e8d1}
+.connection{font-size:13px}
+.intro-band{align-items:center;gap:38px;padding:24px 0 21px}
+.overline{font-size:14px;letter-spacing:.4px;font-weight:700;text-transform:none;margin-bottom:14px}
+.intro-band h1{font-size:clamp(42px,4.8vw,70px);line-height:1.11;letter-spacing:-3.3px}
+.intro-band h1 em{letter-spacing:-3.3px}
+.intro-side{font-size:17px;color:#d0dccd;line-height:1.55}
+.intro-aside{max-width:330px;gap:14px}
+.intro-cta{border-radius:12px;min-height:46px;padding-inline:18px;font-weight:750;font-size:15px}
+.lab-head{padding:18px 28px;font-size:15px;letter-spacing:0;color:#e3eddb}
+.lab-headline{gap:13px}
+.lab-status{font-size:13px;letter-spacing:.1px;font-weight:650}
+.profile{margin-top:17px;margin-bottom:17px;padding:23px 21px}
+.profile-tag{font-size:14px;letter-spacing:0;font-weight:750}
+.profile-copy{margin:20px 0 20px}
+.profile-copy h2{font-size:25px}
+.profile-letter{font-size:52px}
+.profile textarea{min-height:113px;font-size:17px;font-weight:550;line-height:1.6;padding:16px}
+.taste-stage{min-height:300px}
+.lab-controls{gap:20px;grid-template-columns:minmax(210px,1fr) minmax(310px,1.15fr) minmax(210px,.76fr);padding:23px 0 15px}
+.field-eyebrow,.input-wrap label{font-size:15px;letter-spacing:0;font-weight:700;color:#d9e5d5;margin-bottom:10px}
+.example-pill{font-size:15px;font-weight:700;min-height:45px;padding:11px 16px}
+.example-pill:hover{transform:none}
+.input-wrap select{font-size:16px;min-height:51px}
+.primary-action{justify-content:center;padding:0 19px;font-size:16px;font-weight:800;letter-spacing:0}
+.primary-action:hover:not(:disabled){transform:translateY(-1px)}
+.privacy-note{padding-bottom:24px;color:#c5d1c2;font-size:15px;line-height:1.6;font-weight:450;letter-spacing:0;max-width:900px}
+.privacy-note strong{color:#ecffbb;font-weight:700}
+.output-side{display:none}
+.output-head h2{font-size:34px}
+.review-intro p,.results-header p{font-size:16px}
+.review-group-title{font-size:14px;letter-spacing:0}
+.review-note,.heuristic-note,.affinity-disclaimer{font-size:14px}
+.mini-label,.strip-label,.output-index{font-size:13px;letter-spacing:.3px}
+.rank-item{grid-template-columns:34px minmax(0,1fr) 56px;gap:13px;padding:17px 15px}
+.rank-item.selected{box-shadow:inset 4px 0 var(--acid)}
+.score-label{font-size:11px;letter-spacing:0}
+.rank-name{font-size:18px}
+.ranked-area h4,.ranked-area h4 span{font-size:13px;letter-spacing:0}
+.how-section{padding:52px 0 45px;grid-template-columns:minmax(180px,.7fr) minmax(0,1.6fr) auto;gap:27px}
+.how-section h2{font-size:clamp(26px,3vw,38px);line-height:1.2;letter-spacing:-1px;margin:0}
+.how-section>p{font-size:16px;line-height:1.65;color:#c9d4c7}
+.how-section>a{font-size:15px;letter-spacing:0}
+.app-footer{padding:25px 0 35px}
+.app-footer a{font-size:14px}
+@media(max-width:1280px){
+  .lab-controls{grid-template-columns:1fr 1.15fr}
+  .lab-controls>.primary-action{max-width:none}
+  .profile{padding:21px}
+}
+@media(min-width:621px) and (max-width:900px){
+  .intro-band{align-items:start}
+  .lab-form{display:grid;grid-template-columns:1fr 1fr}
+  .profile-a,.profile-b{grid-row:1}
+  .taste-stage{grid-row:2;grid-column:1/-1;min-height:210px}
+  .lab-controls{grid-row:3}
+  .privacy-note{grid-row:4}
+  .how-section{grid-template-columns:1fr 1.5fr}
+}
+@media(max-width:620px){
+  .topbar{height:66px}
+  .connection{font-size:12px;max-width:150px}
+  .intro-band{padding:27px 3px 23px;gap:14px}
+  .overline{font-size:12px;line-height:1.4}
+  .intro-band h1{font-size:clamp(37px,9vw,50px);letter-spacing:-2.5px}
+  .intro-band h1 em{letter-spacing:-2.5px}
+  .intro-side{font-size:16px;line-height:1.52}
+  .lab-head{padding:16px;font-size:14px}
+  .lab-status{font-size:12px}
+  .profile{margin:10px 15px 7px;padding:21px}
+  .profile-a,.profile-b{margin-inline:15px}
+  .profile-copy{margin:16px 0}
+  .profile textarea{min-height:104px;font-size:16px}
+  .taste-stage{min-height:180px}
+  .lab-controls{margin:3px 15px 0;padding:23px 0 15px;gap:17px}
+  .form-options{gap:12px}
+  .field-eyebrow,.input-wrap label{font-size:14px}
+  .example-pill{font-size:14px;min-height:44px}
+  .privacy-note{padding:0 15px 24px;font-size:14px}
+  .rank-item{grid-template-columns:28px minmax(0,1fr) 50px}
+  .how-section{padding:38px 3px;gap:16px}
+  .how-section h2{font-size:30px}
+  .how-section>p{font-size:15px}
+  .app-footer{gap:14px}
+}

@@ -1,6 +1,6 @@
 # Competition readiness and evaluation record
 
-> Snapshot: October 25, 2026. This document is deliberately conservative. A passing local test does **not** mean a winning entry, a valid live API key, an externally working deployment, or organizer acceptance.
+> Updated: October 26, 2026. This document is deliberately conservative. A passing local test does **not** mean a winning entry, a valid live API key, an externally working deployment, or organizer acceptance.
 
 ## Judging criteria, from the official Qloo Devpost rules
 
@@ -22,6 +22,15 @@ All four are equally weighted. The judges decide. There is no defensible externa
 **Why not a generic chatbot?** The returned IDs, rankings, and agreement evidence come from Qloo endpoints. Without live Qloo data the app refuses to produce results. No static recommendation card or fabricated preference probability exists.
 
 **Not a clinical / behavioral claim**: aggregate taste association is not guaranteed satisfaction for an individual. The “verified match” badge indicates only that Qloo returned an item in both independent top lists, not that both persons have actually tested or approved it.
+
+## October 26 release design and usability pass
+
+- Removed decorative directional arrows from navigation, form buttons, preset buttons, results, and footer. Preserved all existing interactive controls and source-evidence functionality.
+- Prioritized the two taste inputs, the category/strategy selectors, and the main action with larger labels, simplified terminology, less repeated copy, and less vertically dominant 3D artwork. Inputs precede the scene on mobile and tablet layouts; the reduced-motion path remains supported.
+- Corrected the idle readiness label: if the event API key is missing, it now says **Qloo key needed**, not **Ready to explore**. An added browser-script regression test covers initial health status and returning to editing.
+- **66 of 66 automated tests passed** on October 26, 2026, with JavaScript syntax checks and Git diff whitespace checks clean. The new `npm run audit:site` verifies seven local HTTP routes/assets, duplicate IDs, headings, HTML labels, described-by targets, local anchor links and main/meta landmarks.
+- Chrome inspected the revised desktop homepage and accessibility semantics. Book club selection correctly updated both inputs and the outcome category; the missing-key error was shown correctly on submit. The 3D scene rendered after its brief startup fallback. No unexpected console/network errors were seen on initial homepage loading; the intentionally missing-key test produced the expected HTTP 503 on `/api/resolve`.
+- **Audit limits:** SiteOne Crawler, Vale, Playwright/WAVE, and Lighthouse were not installed in the approved project environment, so their scores/audits are **not claimed**. The lightweight local site audit is not a substitute for a full crawler, a mobile device lab, WebAIM WAVE, or Lighthouse. Public-host performance and live Qloo remain unverified until the event key and deployment exist.
 
 ## Present local verification
 

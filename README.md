@@ -50,7 +50,10 @@ node --check src/qloo.mjs
 node --check public/app.js
 npm run check
 npm test
+npm run audit:site     # with the local app running on port 4177
 ```
+
+The local site audit checks served assets and API route responses plus duplicate HTML IDs, heading structure, form label targets, and in-page links. It does not replace browser-based accessibility, mobile usability, external-link crawling, or Lighthouse performance audits.
 
 After you receive and configure your **private** Qloo event key, check the real external API with:
 

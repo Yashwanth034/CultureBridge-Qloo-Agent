@@ -8,6 +8,8 @@ const presets={
   books:{a:'book: Dune, movie: Arrival',b:'book: Pride and Prejudice, artist: Adele',category:'book'}
 };
 let draft=null, preview=null, latest=null, selectedIndex=0, requestSerial=0, activeController=null;
+let keyStatus='checking';
+const idleStatus=()=>({checking:'CHECKING QLOO',present:'READY TO EXPLORE',missing:'QLOO KEY NEEDED',unavailable:'CONNECTION UNKNOWN'})[keyStatus];
 const el=(tag,className,text)=>{
   const item=document.createElement(tag);
   if(className)item.className=className;
@@ -16,7 +18,7 @@ const el=(tag,className,text)=>{
 };
 function stage(name) {
   for(const id of stages)$(id).hidden=id!==name;
-  $('phase-indicator').textContent=({ 'empty-state':'NOT STARTED','loading-state':'WORKING','match-review':'REVIEW THE MATCHES','results':'SHORTLIST READY','error-state':'NEEDS ATTENTION'})[name];
+  $('phase-indicator').textContent=name==='empty-state'?idleStatus():({'loading-state':'WORKING','match-review':'REVIEW THE MATCHES','results':'SHORTLIST READY','error-state':'NEEDS ATTENTION'})[name];
   $('results').setAttribute('aria-busy','false');
   document.dispatchEvent(new CustomEvent('culturebridge:phase',{detail:{phase:name}}));
   // The active workspace sits beneath the three taste cards on mobile and
@@ -224,7 +226,7 @@ function resultRow(x,index){
   const fairness=el('span','rank-index');
   fairness.append(el('span','rank-number',x.score),el('span','score-label','BALANCE'));
   button.setAttribute('aria-label','Inspect '+x.name+'; relative-rank fairness index '+x.score+', not a probability');
-  button.append(number,nameWrap,fairness,el('span','rank-arr','↗'));
+  button.append(number,nameWrap,fairness);
   button.addEventListener('click',()=>selectCandidate(index));
   return button;
 }
@@ -349,6 +351,12 @@ for(const id of ['group-a','group-b','category','strategy']){
 fetch('/api/health').then(r=>r.json()).then(data=>{
   const badge=$('api-banner');
   if(badge.dataset.liveVerified==='true')return;
+  keyStatus=data.qlooConfigured?'present':'missing';
   badge.classList.add(data.qlooConfigured?'connected':'needs-key');
   $('api-message').textContent=data.qlooConfigured?'Qloo key present · live access not yet verified':'Qloo key not configured';
-}).catch(()=>{$('api-message').textContent='Qloo connection status unavailable';});
+  if(!$('empty-state').hidden)$('phase-indicator').textContent=idleStatus();
+}).catch(()=>{
+  keyStatus='unavailable';
+  $('api-message').textContent='Qloo connection status unavailable';
+  if(!$('empty-state').hidden)$('phase-indicator').textContent=idleStatus();
+});

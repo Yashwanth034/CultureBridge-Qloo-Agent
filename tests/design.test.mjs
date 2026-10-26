@@ -20,6 +20,19 @@ test('real two-stage app retains all form, review and results controls',async()=
   assert.match(html,/aria-live="polite"/);
   assert.match(html,/class="skip-link"/);
 });
+test('first screen prioritizes plain-language tasks without decorative arrows or redundant labels',async()=>{
+  const html=await source('public/index.html');
+  const js=await source('public/app.js');
+  const css=await source('public/styles.css');
+  assert.doesNotMatch(html,/[↗↶→←]/, 'decorative arrows do not belong on website buttons or links');
+  assert.doesNotMatch(js,/el\('span','rank-arr','↗'\)/, 'ranked choices must not use redundant arrows');
+  assert.doesNotMatch(html,/THE UNKNOWN IN BETWEEN|YOUR SIGNAL|THEIR SIGNAL|01 \/ 02|02 \/ 02/);
+  assert.match(html,/id="taste-format-tip"/);
+  assert.match(html,/aria-describedby="taste-format-tip"/);
+  assert.match(html,/id="how"/);
+  assert.match(css,/\.input-wrap label\{[^}]*font-size:1[4-9]px/);
+  assert.match(css,/\.example-pill\{[^}]*font-size:1[4-9]px/);
+});
 test('responsive workspace has meaningful mobile layouts, focus, reduced motion',async()=>{
   const css=await source('public/styles.css');
   assert.match(css,/@media\(max-width:900px\)/);
