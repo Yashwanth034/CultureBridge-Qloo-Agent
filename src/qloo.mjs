@@ -144,6 +144,17 @@ export class QlooClient {
     const entities=extractEntities(payload);
     const matching=entities.filter(x=>x.type===type);
     if(entities.length>0 && matching.length===0){
+      // Keep the public error generic. Log only category metadata for diagnosing
+      // provider schema changes, never names, entity IDs, request URLs or keys.
+      const first=Array.isArray(payload?.results?.entities)?payload.results.entities[0]:null;
+      console.warn('Qloo Insights category metadata',JSON.stringify({
+        expected:type,
+        parsedTypes:[...new Set(entities.map(item=>item.type??'untyped'))].slice(0,5),
+        rawType:typeof first?.type==='string'?first.type.slice(0,90):null,
+        rawTypes:Array.isArray(first?.types)?first.types.filter(x=>typeof x==='string').slice(0,5):null,
+        subtype:typeof first?.subtype==='string'?first.subtype.slice(0,90):null,
+        fields:first&&typeof first==='object'?Object.keys(first).filter(x=>!['query','entity_id','id','name'].includes(x)).slice(0,20):[]
+      }));
       throw new QlooError('Qloo returned entities outside the requested '+type+' category. Check the event API response.',502);
     }
     return matching.slice(0,take);
