@@ -37,9 +37,19 @@ export function extractEntities(json) {
   return rows.map((item) => {
     const id = String(item.entity_id || item.id || '').trim().toLowerCase();
     const name = String(item.name || '').trim();
-    const types = Array.isArray(item.types) ? item.types : [];
-    const type = CATEGORIES.find((t) => types.includes('urn:entity:' + t) || types.includes(t))
-      || (typeof item.type === 'string' ? item.type.replace(/^urn:entity:/, '') : null);
+    // Qloo's live Insights envelope uses type:"urn:entity" (generic)
+    // and subtype:"urn:entity:movie" (actual output category). Normalize
+    // both it and the older Search shapes, but reject conflicting categories.
+    const rawTypes = [
+      ...(Array.isArray(item.types) ? item.types : []),
+      item.subtype,
+      item.type
+    ];
+    const categories = [...new Set(rawTypes
+      .filter((value) => typeof value === 'string')
+      .map((value) => value.replace(/^urn:entity:/, ''))
+      .filter((value) => CATEGORIES.includes(value)))];
+    const type = categories.length === 1 ? categories[0] : null;
     if (!UUID.test(id) || !name) return null;
     const raw = item.query && item.query.affinity;
     // Qloo's numeric affinity is optional and must never be synthesised from

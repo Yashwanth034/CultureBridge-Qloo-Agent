@@ -9,6 +9,23 @@ test('normalizes documented Qloo entity envelopes',()=>{
   assert.equal(entities[0].type,'movie');
   assert.equal(entities[0].affinity,0.66);
 });
+test('normalizes the verified live Insights subtype envelope without category guessing',async()=>{
+  const live={entity_id:ID,name:'Arrival',type:'urn:entity',subtype:'urn:entity:movie',query:{affinity:0.77}};
+  assert.deepEqual(extractEntities({results:{entities:[live]}}).map(x=>x.type),['movie']);
+  const client=new QlooClient({apiKey:'stub',minGapMs:0,fetchImpl:async()=>({
+    ok:true,status:200,json:async()=>({success:true,results:{entities:[live]}})
+  })});
+  const result=await client.insights('movie',[ID]);
+  assert.equal(result.length,1);
+  assert.equal(result[0].name,'Arrival');
+  assert.equal(result[0].affinity,0.77);
+  assert.deepEqual(extractEntities({results:{entities:[
+    {...live,types:['urn:entity:book']}
+  ]}}).map(x=>x.type),[null]);
+  assert.deepEqual(extractEntities({results:{entities:[
+    {...live,subtype:'urn:entity:tv_show'}
+  ]}}).map(x=>x.type),[null]);
+});
 test('Qloo explainability accepts only validated provider seed IDs and normalized scores',()=>{
   const other='87654321-ffff-4000-8000-123456789012';
   assert.deepEqual(extractContributions({
