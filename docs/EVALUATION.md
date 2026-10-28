@@ -1,6 +1,6 @@
 # Competition readiness and evaluation record
 
-> Updated: October 26, 2026. This document is deliberately conservative. A passing local test does **not** mean a winning entry, a valid live API key, an externally working deployment, or organizer acceptance.
+> Updated: October 28, 2026. Public Qloo integration and hosting have now passed live checks, but a passing technical test does **not** guarantee judging results, participant eligibility, or Devpost acceptance.
 
 ## Judging criteria, from the official Qloo Devpost rules
 
@@ -22,6 +22,15 @@ All four are equally weighted. The judges decide. There is no defensible externa
 **Why not a generic chatbot?** The returned IDs, rankings, and agreement evidence come from Qloo endpoints. Without live Qloo data the app refuses to produce results. No static recommendation card or fabricated preference probability exists.
 
 **Not a clinical / behavioral claim**: aggregate taste association is not guaranteed satisfaction for an individual. The “verified match” badge indicates only that Qloo returned an item in both independent top lists, not that both persons have actually tested or approved it.
+
+## October 28 — Production deployment and live Qloo verification
+
+- **Live public site:** https://culturebridge-qloo-agent.onrender.com/ on Render Free web service, deployed from `main`. The event API key is server-only in Render's `QLOO_API_KEY` environment variable; no key is in source or browser assets.
+- **Verified production run:** `npm run verify:deploy -- https://culturebridge-qloo-agent.onrender.com --live` succeeded for the homepage, CSS, JavaScript assets, health, readiness and full Qloo live entity-resolution → confirmation → recommendations for movie, artist and book. The verification script rejects any wrong-category or invented recommendations.
+- **Actual Qloo behavior:** Movie A and B returned 40 independent results each and **one common candidate**. Artist and book tests expanded to 50 per group, returned **zero mutually verified overlaps**, and truthfully marked joint-signal discoveries exploratory.
+- **Live API compatibility fix:** Qloo Insights currently uses `type: "urn:entity"` and category-specific `subtype: "urn:entity:movie"` (likewise for other categories). The parser now accepts the verified subtype envelope and rejects category conflicts. A new automated regression test covers it.
+- **Quality gate:** 67/67 local automated tests passed on October 28, 2026. Browser tested public live Qloo matching and recommendation rendering. An actual 390px viewport showed control-column overflow, now fixed with a dedicated mobile breakpoint rule and regression assertion.
+- **Remaining human steps:** Confirm eligibility and public anonymous access, review Devpost fields and submit before the official deadline. Judging outcomes cannot be guaranteed. A formal Lighthouse/WAVE/SiteOne/Vale audit was not completed and no scores are claimed.
 
 ## October 26 release design and usability pass
 

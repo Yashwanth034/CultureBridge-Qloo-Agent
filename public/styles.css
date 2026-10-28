@@ -98,8 +98,8 @@
   .profile-copy{margin:16px 0}
   .profile textarea{min-height:104px;font-size:16px}
   .taste-stage{min-height:180px}
-  .lab-controls{margin:3px 15px 0;padding:23px 0 15px;gap:17px}
-  .form-options{gap:12px}
+  .lab-controls{grid-template-columns:minmax(0,1fr);margin:3px 15px 0;padding:23px 0 15px;gap:17px}
+  .form-options{grid-template-columns:minmax(0,1fr);gap:12px}
   .field-eyebrow,.input-wrap label{font-size:14px}
   .example-pill{font-size:14px;min-height:44px}
   .privacy-note{padding:0 15px 24px;font-size:14px}

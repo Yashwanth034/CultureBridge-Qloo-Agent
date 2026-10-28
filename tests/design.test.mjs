@@ -45,6 +45,9 @@ test('responsive workspace has meaningful mobile layouts, focus, reduced motion'
   assert.match(css,/\.taste-stage\{order:2;min-height:180px\}/);
   assert.match(css,/\.profile-b\{order:1\}/);
   assert.match(css,/\.intro-cta/);
+  // Last mobile breakpoint must override the later desktop/tablet grid rule.
+  assert.match(css,/\.lab-controls\{grid-template-columns:minmax\(0,1fr\);margin:3px 15px/);
+  assert.match(css,/\.form-options\{grid-template-columns:minmax\(0,1fr\);gap:12px/);
 });
 test('app loads local behavior with no inline script or unsafe HTML',async()=>{
   const html=await source('public/index.html');

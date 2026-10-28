@@ -4,9 +4,13 @@
 
 **Built for the [Qloo Agentic Hackathon 2026](https://qloo.devpost.com/)**. CultureBridge helps community event coordinators, friendship groups, and campus club organizers choose film, music, or book experiences that neither audience has to sacrifice their tastes for.
 
+**Live public demo:** [culturebridge-qloo-agent.onrender.com](https://culturebridge-qloo-agent.onrender.com/) · **Source code:** [GitHub](https://github.com/Yashwanth034/CultureBridge-Qloo-Agent)
+
+**Production verification (October 28, 2026):** The Render-hosted app returned valid health/readiness and completed real Qloo `/search` → human review → independent and joint `/v2/insights` recommendations for movies, artists, and books using `npm run verify:deploy -- https://culturebridge-qloo-agent.onrender.com --live`. One movie test produced an independently verified shared result; the artist and book test inputs had no independently verified overlap and were correctly marked exploratory. The private event key is stored in Render, not in this repository. Results are dynamic, not hardcoded.
+
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Yashwanth034/CultureBridge-Qloo-Agent)
 
-> **Deployment is not automatic.** This button opens a review flow in your own Render account. Enter your private Qloo event key as the `QLOO_API_KEY` environment variable there. Until the key is configured, the application intentionally shows an informative setup error rather than pretending to use Qloo.
+> The **live public demo above is already deployed**. The Deploy to Render button is for creating a separate installation in your own Render account; that installation needs its own private `QLOO_API_KEY` environment variable. Without a key, the app intentionally reports a configuration error instead of fabricating recommendations.
 
 ## What makes it an agent
 
@@ -38,7 +42,7 @@ export PORT=4177
 node src/server.mjs
 ```
 
-Open **http://localhost:4177/** in a browser. Choose Movie night, Opposite playlists or Book club, edit the two groups' examples, select **Fair to both groups** or **Discover something new**, then submit. The app reports a visible error until the key is configured. It never pretends mock data is live.
+Open **http://localhost:4177/** in a browser. Choose Movie night, Music tastes or Book club, edit the two groups' examples, select **Fair to both** or **Surprise us**, then submit. The app reports a visible error until the key is configured. It never pretends mock data is live.
 
 For verification:
 

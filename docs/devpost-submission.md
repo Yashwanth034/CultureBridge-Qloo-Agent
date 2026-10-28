@@ -1,6 +1,6 @@
 # Draft Devpost submission — CultureBridge
 
-> **STATUS: DRAFT, NOT SUBMITTED.** Replace bracketed placeholders only after the public website and repository exist. Verify actual Qloo calls with a real event key before claiming full functionality. Project authors should review and own the entry.
+> **STATUS: VERIFIED PUBLIC DEMO — READY FOR AUTHOR REVIEW, NOT SUBMITTED.** The public Render application and real Qloo entity-resolution, independent/joint Insights, and recommendation flows were verified on October 28, 2026. The author must review and personally submit the Devpost entry.
 
 ## Project name
 
@@ -39,7 +39,7 @@ Resolving ambiguous culture entity names, designing a scoring process that doesn
 - A coherent, interactive end-to-end application.
 - Transparent, inspectable Qloo-integration code and ranking pipeline.
 - Explicit error states for missing keys, missing matches, and absent independent overlap.
-- Local automated tests and browser smoke checks. **Do not claim verified live Qloo operation until a live key test passes.**
+- Verified production deployment, real Qloo event API calls, and end-to-end movie/artist/book recommendation flows. Movie inputs produced a verified shared overlap; artist and book test inputs correctly produced exploratory-only suggestions without inventing agreement. Automated tests: 67/67 passed before the final responsive CSS pass.
 
 ## What's next
 
@@ -59,16 +59,16 @@ https://github.com/Yashwanth034/CultureBridge-Qloo-Agent
 
 ## Functional public demo
 
-[INSERT HOSTED APP URL HERE]
+https://culturebridge-qloo-agent.onrender.com/
 
 ## Test instructions for judges
 
 1. Open the public app and verify the Qloo connection banner is green.
-2. Click "Movie night", then "Find our connection".
+2. Click "Movie night", then "Find shared picks".
 3. Review Qloo's resolved identities for each person's tastes; choose the correct match when Qloo shows multiple options.
-4. Click "Reveal our shared discoveries" to run the independent and joint live Qloo insights requests.
+4. Click "Show recommendations" to run the independent and joint live Qloo insights requests.
 5. Inspect a result in the shared shortlist to compare the evidence from both perspectives.
-6. Try "Different playlists" with artists, or "Book club" with books.
+6. Try "Music tastes" with artists, or "Book club" with books.
 7. Expand the agent's reasoning section to examine the decision trail.
 8. Change one taste seed and regenerate to see live taste differences.
 9. Export the evidence report. If no independent match appears, the app correctly labels joint-only suggestions exploratory.
@@ -76,12 +76,12 @@ https://github.com/Yashwanth034/CultureBridge-Qloo-Agent
 ## Before pressing Submit — required checklist
 
 - [ ] Confirm eligible country, adulthood, and participation rules
-- [ ] Request event key via the [official Qloo Agentic Hackathon Google Form](https://forms.gle/zz12orkLHTAneLGz6); enter personal details yourself and accept the terms, then store the issued key in the hosting secret manager, never in the repository
-- [ ] Verify real Qloo requests (search and insights) with `npm run verify:qloo` and actual private event key, correct status and response structure
-- [ ] Public website runs correctly for an anonymous judge (no password, no localhost); run `npm run verify:deploy -- https://YOUR-HOST.onrender.com --live` for the full public Qloo search → review → recommendation path
+- [x] Qloo event key received from organizers and stored privately as Render `QLOO_API_KEY`, never committed to the repository
+- [x] Real Qloo `GET /search` and `GET /v2/insights` succeeded through the public service for movie, artist and book flows (October 28, 2026)
+- [x] Public HTTPS website and all six hosted routes passed `npm run verify:deploy -- https://culturebridge-qloo-agent.onrender.com --live` for search → review → recommendations in all three categories
 - [x] Repository is public and has README, all source, and MIT LICENSE committed. Check that GitHub detects the license in the repository About area.
-- [ ] Test responsive UI, bad inputs, and the three output categories on published site
-- [ ] Check public demo/source URLs in an incognito session
+- [x] The three output categories passed public live API tests; browser tested identity review and recommendations. A 390px mobile viewport uncovered a control-column overflow, corrected with a final regression-guarded CSS fix.
+- [ ] Confirm the public demo and source URLs in an anonymous/incognito browser before the author presses Submit
 - [ ] Complete all fields and final submission on Devpost before 30 October 2026 11:45 PM EDT
 - [ ] Be available for finalist preparation and the 5 November live presentation, if shortlisted
 
